@@ -1,5 +1,7 @@
-package org.burbokop.routes
+package org.burbokop.routes.git
 
+import org.burbokop.utils.SttpUtils
+import org.burbokop.models.git.GithubBranch
 import sttp.client3.{HttpURLConnectionBackend, UriContext, asByteArray, asString, basicRequest}
 
 object GithubRoutes {
@@ -8,6 +10,14 @@ object GithubRoutes {
       .header("Accept", "application/vnd.github.v3+json")
       .get(uri"https://api.github.com/repos/$user/$repo")
       .response(asString)
+      .send(HttpURLConnectionBackend())
+  }
+
+  def getBranch(user: String, repo: String, branch: String) = {
+    basicRequest
+      .header("Accept", "application/vnd.github.v3+json")
+      .get(uri"https://api.github.com/repos/$user/$repo/branches/$branch")
+      .response(SttpUtils.as[GithubBranch])
       .send(HttpURLConnectionBackend())
   }
 

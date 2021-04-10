@@ -1,4 +1,4 @@
-package com.wavysys.utils
+package org.burbokop.utils
 
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import sttp.client3.asString

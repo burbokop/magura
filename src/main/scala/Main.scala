@@ -1,33 +1,18 @@
 import org.burbokop.generators.{CMakeGenerator, GeneratorDistributor}
-import org.burbokop.routes.GithubRoutes
+import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
+import org.burbokop.repository.MaguraRepository
+import org.burbokop.routes.git.GithubRoutes
 import org.burbokop.utils.ZipUtils
+import sttp.client3.SttpClientException
 
-import java.io.{ByteArrayInputStream, File, FileOutputStream}
+import java.io.{ByteArrayInputStream, File}
 
 object Main extends App {
-  val generatorDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeGenerator()))
-
-  def proceedRepository(user: String, repo: String, cacheFolder: String) =
-    GithubRoutes.downloadRepositoryZip(user, repo, "")
-      .body.fold(
-      Left(_),
-      { data =>
-        ZipUtils.unzipToFolder(new ByteArrayInputStream(data), s"$cacheFolder${File.separator}$user${File.separator}$repo").fold(
-          Left(_),
-          { repoEntry =>
-            generatorDistributor
-              .proceed(
-                s"$cacheFolder${File.separator}$user${File.separator}$repo${File.separator}$repoEntry",
-                s"$cacheFolder${File.separator}$user${File.separator}$repo${File.separator}build_$repoEntry")
-              .map(Left(_))
-              .getOrElse(Right())
-          }
-        )
-      }
-    )
-
   val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
-
-  val result = proceedRepository("burbokop", "SPM", cacheFolder)
-  println(s"$result")
+  val generatorDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeGenerator()))
+  MaguraRepository.download(generatorDistributor, "burbokop", "SPM", "master", cacheFolder).fold({ err =>
+    println(s"error: $err")
+  }, { message =>
+    println(message)
+  })
 }
