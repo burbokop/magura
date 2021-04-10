@@ -1,13 +1,13 @@
-package utils
+package org.burbokop.utils
 
 import java.io.{ByteArrayInputStream, File, FileOutputStream, IOException, InputStream}
 import java.util.zip.{ZipEntry, ZipInputStream}
 import scala.annotation.tailrec
 
 object ZipUtils {
-  case class ZipError(message: String)
+  case class Error(message: String) extends Exception(message)
 
-  def unzipToFolder(inputStream: InputStream, outputPath: String): Option[ZipError] = try {
+  def unzipToFolder(inputStream: InputStream, outputPath: String): Either[Error, String] = try {
     @tailrec
     def iterator(zipEntry: Option[ZipEntry], zipStream: ZipInputStream, buffer: Array[Byte]): Unit = {
       if (zipEntry.isDefined) {
@@ -35,15 +35,19 @@ object ZipUtils {
 
     val outputFolder = new File(outputPath);
     if (!outputFolder.exists()) {
-      outputFolder.mkdir();
+      outputFolder.mkdirs();
     }
     val zipStream = new ZipInputStream(inputStream);
     val buffer = new Array[Byte](1024)
-    iterator(Option(zipStream.getNextEntry()), zipStream, buffer)
-    zipStream.closeEntry()
-    zipStream.close()
-    None
+    Option(zipStream.getNextEntry()).map { mainEntry =>
+      iterator(Some(mainEntry), zipStream, buffer)
+      zipStream.closeEntry()
+      zipStream.close()
+      Right(mainEntry.getName)
+    } getOrElse {
+      Left(Error("empty archive"))
+    }
   } catch {
-    case e: IOException => Some(ZipError(s"IO exception: ${e.getMessage}"))
+    case e: IOException => Left(Error(s"IO exception: ${e.getMessage}"))
   }
 }

@@ -24,5 +24,6 @@
     <orderEntry type="library" name="sbt: com.typesafe.play:play-json_2.13:2.9.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.5:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.13.5:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.yaml:snakeyaml:1.8:jar" level="project" />
   </component>
 </module>

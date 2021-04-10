@@ -1,27 +1,33 @@
-import routes.GithubRoutes
-import utils.ZipUtils
+import org.burbokop.generators.{CMakeGenerator, GeneratorDistributor}
+import org.burbokop.routes.GithubRoutes
+import org.burbokop.utils.ZipUtils
 
-import java.io.{BufferedOutputStream, ByteArrayInputStream, File, FileOutputStream, FileWriter}
-import java.util.zip.{ZipInputStream, ZipOutputStream}
-
-
+import java.io.{ByteArrayInputStream, File, FileOutputStream}
 
 object Main extends App {
+  val generatorDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeGenerator()))
 
-
-  def downloadRepo(user: String, repo: String) = {
+  def proceedRepository(user: String, repo: String, cacheFolder: String) =
     GithubRoutes.downloadRepositoryZip(user, repo, "")
       .body.fold(
       Left(_),
       { data =>
-        println(s"data received: ${data.length}, $data")
-        ZipUtils.unzipToFolder(new ByteArrayInputStream(data), s"./result_repos/$user/$repo")
-        val bos = new FileOutputStream(s"./result_repos/$user/$repo.zip")
-        bos.write(data)
-        bos.close()
+        ZipUtils.unzipToFolder(new ByteArrayInputStream(data), s"$cacheFolder${File.separator}$user${File.separator}$repo").fold(
+          Left(_),
+          { repoEntry =>
+            generatorDistributor
+              .proceed(
+                s"$cacheFolder${File.separator}$user${File.separator}$repo${File.separator}$repoEntry",
+                s"$cacheFolder${File.separator}$user${File.separator}$repo${File.separator}build_$repoEntry")
+              .map(Left(_))
+              .getOrElse(Right())
+          }
+        )
       }
     )
-  }
 
-  downloadRepo("burbokop", "SPM")
+  val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
+
+  val result = proceedRepository("burbokop", "SPM", cacheFolder)
+  println(s"$result")
 }

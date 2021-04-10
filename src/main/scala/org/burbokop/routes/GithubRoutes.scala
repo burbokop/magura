@@ -1,4 +1,4 @@
-package routes
+package org.burbokop.routes
 
 import sttp.client3.{HttpURLConnectionBackend, UriContext, asByteArray, asString, basicRequest}
 
