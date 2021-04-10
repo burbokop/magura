@@ -9,7 +9,7 @@ import java.io.{ByteArrayInputStream, File}
 
 object MaguraRepository {
 
-  def download(generatorDistributor: GeneratorDistributor, user: String, repo: String, branchName: String, cacheFolder: String): Either[Throwable, String] = {
+  def install(generatorDistributor: GeneratorDistributor, user: String, repo: String, branchName: String, cacheFolder: String): Either[Throwable, String] = {
     val repoFolder = s"$cacheFolder${File.separator}$user${File.separator}$repo"
     val metaFile = s"$repoFolder${File.separator}meta.json"
     GithubRoutes.getBranch(user, repo, branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
