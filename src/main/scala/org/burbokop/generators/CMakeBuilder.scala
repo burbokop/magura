@@ -1,10 +1,8 @@
 package org.burbokop.generators
 
 import java.io.{File, FileInputStream, FileOutputStream}
-import scala.language.postfixOps
-import sys.process._
 
-object CMakeGenerator {
+object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
 
   def recursiveListFiles(f: File): Array[File] = {
@@ -25,10 +23,10 @@ object CMakeGenerator {
       if (r0 == 0 && r1 == 0) {
         Right()
       } else {
-        Left(CMakeGenerator.Error(s"error cmake code: $r0, $r1"))
+        Left(CMakeBuilder.Error(s"error cmake code: $r0, $r1"))
       }
     } else {
-      Left(CMakeGenerator.Error("CMakeLists.txt not found"))
+      Left(CMakeBuilder.Error("CMakeLists.txt not found"))
     }
   }
 
@@ -72,10 +70,10 @@ object CMakeGenerator {
   }
 }
 
-class CMakeGenerator extends Generator {
+class CMakeBuilder extends Generator {
   override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Unit] = {
-    CMakeGenerator.buildCMake(inputPath, outputPath).fold[Either[Throwable, Unit]](Left(_), { _ =>
-      CMakeGenerator.copyHeaders(inputPath, outputPath)
+    CMakeBuilder.buildCMake(inputPath, outputPath).fold[Either[Throwable, Unit]](Left(_), { _ =>
+      CMakeBuilder.copyHeaders(inputPath, outputPath)
     })
   }
 }

@@ -1,8 +1,9 @@
+import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageMapping
 import com.typesafe.sbt.packager.linux.LinuxSymlink
 
 name := "magura"
 
-version := "0.1"
+version := "0.1.1"
 
 maintainer := "Borys Boiko <burbokop@gmail.com>"
 packageSummary := "Package for downloading dependencies from github"
@@ -11,7 +12,7 @@ packageDescription := "Description"
 scalaVersion := "2.13.5"
 
 enablePlugins(DebianPlugin)
-debianPackageDependencies := Seq("cmake")
+debianPackageDependencies := Seq(/*"cmake", */"java8-runtime-headless")
 
 mainClass in assembly := Some("org.burbokop.Main")
 
@@ -37,9 +38,11 @@ linuxPackageMappings := {
         |java -jar /usr/share/magura/lib/${jar.name} $$@
      """.stripMargin.toArray.map(_.toByte))
 
+  val cmakeConfig = sourceDirectory.value / "main" / "resources" / "magura-config.cmake"
   Seq(
     packageMapping((jar, s"/usr/share/magura/lib/${jar.name}")),
-    packageMapping((bin, s"/usr/share/magura/bin/magura"))
+    packageMapping((bin, s"/usr/share/magura/bin/magura")),
+    packageMapping((cmakeConfig, s"/opt/magura/magura-config.cmake"))
   )
 }
 

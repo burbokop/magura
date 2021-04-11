@@ -7,35 +7,53 @@ import org.burbokop.utils.ZipUtils
 
 import java.io.{ByteArrayInputStream, File}
 
-object MaguraRepository {
+case class MaguraRepository(
+                           user: String,
+                           repo: String,
+                           branchName: String
+                           )
 
-  def install(generatorDistributor: GeneratorDistributor, user: String, repo: String, branchName: String, cacheFolder: String): Either[Throwable, String] = {
-    val repoFolder = s"$cacheFolder${File.separator}$user${File.separator}$repo"
+object MaguraRepository {
+  case class Error(message: String) extends Exception(message)
+
+  def fromString(string: String): Either[Throwable, MaguraRepository] = {
+    val parts = string.split('.')
+    if (parts.length == 3) {
+      Right(MaguraRepository(parts(0), parts(1), parts(2)))
+    } else {
+      Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch} but got '$string'"))
+    }
+  }
+
+  def get(builderDistributor: GeneratorDistributor, repository: MaguraRepository, cacheFolder: String): Either[Throwable, RepositoryMetaData] = {
+    val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.repo}"
     val metaFile = s"$repoFolder${File.separator}meta.json"
-    GithubRoutes.getBranch(user, repo, branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
+    GithubRoutes.getBranch(repository.user, repository.repo, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
       val meta = RepositoryMetaData.fromJsonDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
-        GithubRoutes.downloadRepositoryZip(user, repo, branchName)
+        GithubRoutes.downloadRepositoryZip(repository.user, repository.repo, repository.branchName)
           .body.fold(Left(_), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
             val entryFolder = s"$repoFolder${File.separator}$repoEntry"
-            val generatedFolder = s"$repoFolder${File.separator}generated_$repoEntry"
-            generatorDistributor
-              .proceed(entryFolder, generatedFolder)
+            val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
+            builderDistributor
+              .proceed(entryFolder, buildFolder)
               .fold(Left(_), { _ =>
                 meta.withVersion(RepositoryVersion(
                   branch.commit.sha,
                   entryFolder,
-                  generatedFolder
+                  buildFolder
                 )).writeJsonToFile(metaFile, true)
               })
           })
         })
-        Right("")
+        Right(meta)
       } else {
-        Right(s"already up to date. branch: ${branch.commit.sha}")
+        Right(meta)
       }
     })
   }
 
+  def get(builderDistributor: GeneratorDistributor, repos: List[MaguraRepository], cacheFolder: String): List[Either[Throwable, RepositoryMetaData]] =
+    repos.map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder))
 }
