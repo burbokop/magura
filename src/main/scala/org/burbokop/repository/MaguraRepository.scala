@@ -8,9 +8,10 @@ import org.burbokop.utils.ZipUtils
 import java.io.{ByteArrayInputStream, File}
 
 case class MaguraRepository(
-                           user: String,
-                           repo: String,
-                           branchName: String
+                             user: String,
+                             name: String,
+                             branchName: String,
+                             builder: Option[String]
                            )
 
 object MaguraRepository {
@@ -19,24 +20,32 @@ object MaguraRepository {
   def fromString(string: String): Either[Throwable, MaguraRepository] = {
     val parts = string.split('.')
     if (parts.length == 3) {
-      Right(MaguraRepository(parts(0), parts(1), parts(2)))
+      val parts2 = parts(2).split(':')
+      if (parts2.length == 2) {
+        Right(MaguraRepository(parts(0), parts(1), parts2(0), Some(parts2(1))))
+      } else if(parts2.length == 1) {
+        Right(MaguraRepository(parts(0), parts(1), parts2(0), None))
+      } else {
+        Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch}:{builder(optional)} but got '$string'"))
+      }
     } else {
-      Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch} but got '$string'"))
+      Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch}:{builder(optional)} but got '$string'"))
     }
   }
 
   def get(builderDistributor: GeneratorDistributor, repository: MaguraRepository, cacheFolder: String): Either[Throwable, RepositoryMetaData] = {
-    val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.repo}"
+    val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}meta.json"
-    GithubRoutes.getBranch(repository.user, repository.repo, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
+    GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
       val meta = RepositoryMetaData.fromJsonDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
-        GithubRoutes.downloadRepositoryZip(repository.user, repository.repo, repository.branchName)
+        GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
           .body.fold(Left(_), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
             val entryFolder = s"$repoFolder${File.separator}$repoEntry"
             val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
             builderDistributor
+              .map(mf => repository.builder.getOrElse(mf.builder))
               .proceed(entryFolder, buildFolder)
               .fold(Left(_), { _ =>
                 meta.withVersion(RepositoryVersion(

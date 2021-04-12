@@ -9,23 +9,23 @@ import java.io.File
 object InstallTask extends Task {
   override def exec(args: Array[String]): Unit = {
     val parsedArgs: Args = """
-                             |magura install [github {user}/{repo} packages]
+                             |magura install [github {user}.{repo}.{branch}:{builder(optional)} packages]
                              |Downloads packages.
                              |
                              |""".stripMargin.toArgs.process(args)
 
-    for(p <- parsedArgs.remaining) {
-      val parts = p.split('/')
-      if (parts.length > 1) {
-        println(s"installing: github.com/${parts(0)}/${parts(1)}")
+    val result = for(p <- parsedArgs.remaining) yield {
+      MaguraRepository.fromString(p).fold(Left(_), { repository =>
+        println(s"installing: github.com/${repository.user}/${repository.name} (branch: ${repository.branchName}, builder: ${repository.builder.getOrElse("<default>")})")
         val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
         val builderDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeBuilder()), _.builder)
-        MaguraRepository.get(builderDistributor, parts(0), parts(1), "master", cacheFolder).fold({ err =>
-          println(s"error: $err")
+        MaguraRepository.get(builderDistributor, repository, cacheFolder).fold({ err =>
+          Left(_)
         }, { message =>
           println(message)
+          Right(_)
         })
-      }
+      })
     }
-  }
+    println(result)
 }

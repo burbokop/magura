@@ -20,4 +20,7 @@ class GeneratorDistributor(generators: Map[String, Generator], generatorField: M
       }
     )
   }
+
+  def map(generatorField: MaguraFile => String) =
+    new GeneratorDistributor(generators, generatorField)
 }

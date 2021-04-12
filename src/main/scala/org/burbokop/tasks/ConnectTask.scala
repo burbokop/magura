@@ -1,7 +1,7 @@
 package org.burbokop.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.generators.{CMakeConnector, GeneratorDistributor, MaguraFile}
+import org.burbokop.generators.{CMakeBuilder, CMakeConnector, GeneratorDistributor}
 import org.burbokop.utils.FileUtils
 
 import java.io.File
@@ -21,10 +21,17 @@ object ConnectTask extends Task {
     val input = FileUtils.normalizeFolder(parsedArgs.get[String]("project").get)
     val output = FileUtils.normalizeFolder(parsedArgs.get[String]("output").get)
 
+    val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
 
-    val connectDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeConnector()), _.connector)
+    val builderDistributor = new GeneratorDistributor(Map(
+      "cmake" -> new CMakeBuilder()
+    ), _.builder)
 
-    val result = connectDistributor.proceed(input, output)
+    val connectorDistributor = new GeneratorDistributor(Map(
+      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder)
+    ), _.connector)
+
+    val result = connectorDistributor.proceed(input, output)
     println(s"result: $result")
   }
 }
