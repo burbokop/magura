@@ -18,30 +18,34 @@ case class MaguraFile(
 object MaguraFile {
   case class Error(message: String) extends Exception(message)
 
-  def fromMap(map: mutable.Map[String, Any]): Either[Error, MaguraFile] = {
+  def fromMap(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
     val builder = map.get("builder").map(_.toString)
     val connector = map.get("connector").map(_.toString)
     val dependencies = map.get("dependencies").map(
       _.asInstanceOf[java.util.ArrayList[String]].asScala.toList.map(
         MaguraRepository.fromString(_)
       )
-    )
+    ).getOrElse(List())
     if(builder.isEmpty && connector.isEmpty) {
       Left(MaguraFile.Error("builder or/and connector must be set"))
     } else {
-      val left = dependencies.getOrElse(List()).find(_.isLeft)
-      Right(MaguraFile(
-        builder.getOrElse(""),
-        connector.getOrElse(""),
-
-      ))
+      (dependencies.partition(_.isLeft) match {
+        case (Nil,  ints) => Right(for(Right(i) <- ints) yield i)
+        case (strings, _) => Left(for(Left(s) <- strings) yield s)
+      }).fold(e => Left(e.reduce((a: Throwable, b: Throwable) => MaguraFile.Error(a.getMessage + ", " + b.getMessage))), { repos =>
+        Right(MaguraFile(
+          builder.getOrElse(""),
+          connector.getOrElse(""),
+          repos
+        ))
+      })
     }
   }
 
-  def fromYaml(inputStream: InputStream): Either[Error, MaguraFile] =
+  def fromYaml(inputStream: InputStream): Either[Throwable, MaguraFile] =
     fromMap(new Yaml().load(inputStream).asInstanceOf[java.util.Map[String, Any]].asScala)
 
-  def fromYaml(path: String): Either[Error, MaguraFile] = try {
+  def fromYaml(path: String): Either[Throwable, MaguraFile] = try {
     fromYaml(new FileInputStream(path))
   } catch {
     case e => Left(MaguraFile.Error(e.getMessage))
