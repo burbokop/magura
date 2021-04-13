@@ -41,9 +41,10 @@ case class RepositoryMetaData(
     if (pretty) Json.prettyPrint(Json.toJson(this))
     else Json.stringify(Json.toJson(this))
 
-  def writeJsonToFile(path: String, pretty: Boolean = false): Either[Throwable, Unit] =
+  def writeJsonToFile(path: String, pretty: Boolean = false): Either[Throwable, RepositoryMetaData] =
     try {
-      Right(new FileOutputStream(path).write(toJson(pretty).toArray.map(_.toByte)))
+      new FileOutputStream(path).write(toJson(pretty).toArray.map(_.toByte))
+      Right(this)
     } catch {
       case e => Left(e)
     }

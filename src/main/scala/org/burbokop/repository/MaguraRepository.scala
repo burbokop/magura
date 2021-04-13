@@ -1,6 +1,6 @@
 package org.burbokop.repository
 
-import org.burbokop.generators.GeneratorDistributor
+import org.burbokop.generators.{GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.routes.git.GithubRoutes
 import org.burbokop.utils.ZipUtils
@@ -40,7 +40,7 @@ object MaguraRepository {
       val meta = RepositoryMetaData.fromJsonDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
         GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
-          .body.fold(Left(_), { data =>
+          .body.fold(e => Left(MaguraRepository.Error(e)), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
             val entryFolder = s"$repoFolder${File.separator}$repoEntry"
             val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
@@ -56,13 +56,19 @@ object MaguraRepository {
               })
           })
         })
-        Right(meta)
       } else {
         Right(meta)
       }
     })
   }
 
-  def get(builderDistributor: GeneratorDistributor, repos: List[MaguraRepository], cacheFolder: String): List[Either[Throwable, RepositoryMetaData]] =
-    repos.map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder))
+  def get(builderDistributor: GeneratorDistributor, repos: List[MaguraRepository], cacheFolder: String): Either[Throwable, List[RepositoryMetaData]] =
+    (repos
+      .map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder))
+      .partition(_.isLeft) match {
+      case (Nil,  ints) => Right(for(Right(i) <- ints) yield i)
+      case (strings, _) => Left(for(Left(s) <- strings) yield s)
+    })
+      .left
+      .map(e => e.reduce((a: Throwable, b: Throwable) => MaguraRepository.Error(a.getMessage + ", " + b.getMessage)))
 }
