@@ -1,14 +1,11 @@
 package org.burbokop.generators
 
+import org.burbokop.utils.FileUtils
+
 import java.io.{File, FileInputStream, FileOutputStream}
 
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
-
-  def recursiveListFiles(f: File): Array[File] = {
-    val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
-  }
 
   def buildCMake(inputPath: String, outputPath: String): Either[Throwable, Unit] = {
     val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
@@ -30,29 +27,13 @@ object CMakeBuilder {
     }
   }
 
-  def copyFile(src: String, dest: String): Either[Throwable, Unit] = {
-    try {
-      val destDir = new File(dest).getParentFile
-      if (!destDir.exists()) {
-        destDir.mkdirs()
-      }
-      val inputChannel = new FileInputStream(src).getChannel
-      val outputChannel = new FileOutputStream(dest).getChannel
-      outputChannel.transferFrom(inputChannel, 0, inputChannel.size)
-      inputChannel.close()
-      Right()
-    } catch {
-      case e => Left(e)
-    }
-  }
-
   def copyHeaders(inputPath: String, outputPath: String): Either[Throwable, Unit] = {
     val outputFolder = new File(outputPath)
     if (!outputFolder.exists()) {
       outputFolder.mkdirs();
     }
     val inputFolder = new File(inputPath)
-    recursiveListFiles(inputFolder).map[Either[Throwable, Unit]] { file =>
+    FileUtils.recursiveListFiles(inputFolder).map[Either[Throwable, Unit]] { file =>
       val path: String = file.getPath
       val newPath = outputPath +
         File.separator +
@@ -61,7 +42,7 @@ object CMakeBuilder {
         path.substring(inputPath.length, path.length)
 
       if (path.endsWith(".h") || path.endsWith(".hpp")) {
-        copyFile(path, newPath)
+        FileUtils.copyFile(path, newPath)
       } else {
         Right()
       }
