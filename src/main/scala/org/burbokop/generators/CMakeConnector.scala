@@ -10,6 +10,11 @@ object CMakeConnector {
   case class Error(message: String) extends Exception(message)
 
   def connectMetas(metas: List[RepositoryMetaData], outputPath: String): Either[Error, Unit] = {
+    for(m <- metas) yield {
+      val currentVersion = m.versions.find(_.commit == m.currentCommit)
+    }
+
+
     println(s"connectMetas: $metas, $outputPath")
     Right()
   }
