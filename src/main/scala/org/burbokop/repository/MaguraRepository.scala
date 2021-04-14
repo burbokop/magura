@@ -45,8 +45,11 @@ object MaguraRepository {
             val entryFolder = s"$repoFolder${File.separator}$repoEntry"
             val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
             builderDistributor
-              .map(mf => repository.builder.getOrElse(mf.builder))
-              .proceed(entryFolder, buildFolder)
+              .proceed(
+                entryFolder,
+                buildFolder,
+                repository.builder.map(MaguraFile.fromBuilder(_))
+              )
               .fold(Left(_), { _ =>
                 meta.withVersion(RepositoryVersion(
                   branch.commit.sha,

@@ -18,6 +18,8 @@ case class MaguraFile(
 object MaguraFile {
   case class Error(message: String) extends Exception(message)
 
+  def fromBuilder(builder: String) = MaguraFile(builder, "", List())
+
   def fromMap(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
     val builder = map.get("builder").map(_.toString)
     val connector = map.get("connector").map(_.toString)

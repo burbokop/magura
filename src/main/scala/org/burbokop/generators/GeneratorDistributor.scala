@@ -8,19 +8,22 @@ object GeneratorDistributor{
 }
 
 class GeneratorDistributor(generators: Map[String, Generator], generatorField: MaguraFile => String) {
-  def proceed(inputFolder: String, outputFolder: String): Either[Throwable, Boolean] = {
-    MaguraFile.fromYaml(s"$inputFolder${File.separator}${GeneratorDistributor.maguraFileName}")
-      .fold[Either[Throwable, Boolean]](Left(_), { maguraFile =>
-        val generator = generatorField(maguraFile)
-        generators.get(generator).map { generator =>
-          generator.proceed(inputFolder, outputFolder, maguraFile)
-        } getOrElse {
-          Left(Generator.Error(s"generator $generator not found"))
-        }
-      }
-    )
+  private def proceedWithMaguraFile(inputFolder: String, outputFolder: String, maguraFile: MaguraFile) = {
+    val generator = generatorField(maguraFile)
+    generators.get(generator).map { generator =>
+      generator.proceed(inputFolder, outputFolder, maguraFile)
+    } getOrElse {
+      Left(Generator.Error(s"generator $generator not found"))
+    }
   }
 
-  def map(generatorField: MaguraFile => String) =
-    new GeneratorDistributor(generators, generatorField)
+  def proceed(inputFolder: String, outputFolder: String, maguraFile: Option[MaguraFile] = None): Either[Throwable, Boolean] =
+    maguraFile.map { maguraFile =>
+      proceedWithMaguraFile(inputFolder, outputFolder, maguraFile)
+    } getOrElse {
+      MaguraFile.fromYaml(s"$inputFolder${File.separator}${GeneratorDistributor.maguraFileName}")
+        .fold[Either[Throwable, Boolean]](Left(_), { maguraFile =>
+          proceedWithMaguraFile(inputFolder, outputFolder, maguraFile)
+        })
+    }
 }

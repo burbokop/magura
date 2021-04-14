@@ -12,7 +12,7 @@ packageDescription := "Description"
 scalaVersion := "2.13.5"
 
 enablePlugins(DebianPlugin)
-debianPackageDependencies := Seq("cmake", "java8-runtime-headless")
+debianPackageDependencies := Seq(/*"cmake",*/ "java8-runtime-headless")
 
 mainClass in assembly := Some("org.burbokop.Main")
 
