@@ -5,7 +5,7 @@ import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
 
-import java.io.{File, FileOutputStream}
+import java.io.File
 import scala.language.{implicitConversions, postfixOps}
 
 object CMakeConnector {
@@ -58,7 +58,7 @@ object CMakeConnector {
     }
   }
 
-  def connectMetas(metas: List[RepositoryMetaData], outputPath: String): Either[Error, Unit] = {
+  def connectMetas(metas: List[RepositoryMetaData], outputPath: String): Either[Throwable, Boolean] = {
     val projects = (for(m <- metas) yield {
       m.versions.find(_.commit == m.currentCommit).map { version =>
         Project(findLibraries(new File(version.buildPath)), version.buildPath)
@@ -67,20 +67,18 @@ object CMakeConnector {
       .filter(_.isDefined)
       .map(_.get)
 
-    val a = FileUtils.writeIfDifferent(
+    FileUtils.writeIfDifferent(
       s"$outputPath/magura_build_info.cmake",
       generateCMake(projects)
     )
-
-    println(s"connectMetas: $metas, $outputPath, $a")
-    Right()
   }
 }
 
 class CMakeConnector(builderDistributor: GeneratorDistributor, cacheFolder: String) extends Generator {
-  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Unit] = {
-    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder).fold(Left(_), { metas =>
-      connectMetas(metas, outputPath)
-    })
+  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Boolean] = {
+    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
+      .fold(Left(_), { metas =>
+        connectMetas(metas, outputPath)
+      })
   }
 }

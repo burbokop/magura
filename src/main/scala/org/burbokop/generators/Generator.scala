@@ -5,5 +5,5 @@ object Generator {
 }
 
 abstract class Generator {
-  def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Unit]
+  def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Boolean]
 }

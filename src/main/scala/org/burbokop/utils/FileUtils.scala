@@ -46,4 +46,17 @@ object FileUtils {
       case e => Left(e)
     }
   }
+
+  def writeIfNotExist(path: String, data: String): Either[Throwable, Boolean] = {
+    try {
+      if (!new File(path).exists()) {
+        new FileOutputStream(path).write(data.toArray.map(_.toByte))
+        Right(true)
+      } else {
+        Right(false)
+      }
+    } catch {
+      case e => Left(e)
+    }
+  }
 }

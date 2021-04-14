@@ -52,9 +52,9 @@ object CMakeBuilder {
 }
 
 class CMakeBuilder extends Generator {
-  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Unit] = {
-    CMakeBuilder.buildCMake(inputPath, outputPath).fold[Either[Throwable, Unit]](Left(_), { _ =>
-      CMakeBuilder.copyHeaders(inputPath, outputPath)
+  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Boolean] = {
+    CMakeBuilder.buildCMake(inputPath, outputPath).fold[Either[Throwable, Boolean]](Left(_), { _ =>
+      CMakeBuilder.copyHeaders(inputPath, outputPath).map(_ => true)
     })
   }
 }

@@ -31,7 +31,14 @@ object ConnectTask extends Task {
       "cmake" -> new CMakeConnector(builderDistributor, cacheFolder)
     ), _.connector)
 
-    val result = connectorDistributor.proceed(input, output)
-    println(s"result: $result")
+    connectorDistributor.proceed(input, output).fold({ error =>
+      println(s"magura connection error: ${error.getMessage}")
+    }, {
+      if(_) {
+        println(s"magura connected")
+      } else {
+        println(s"magura already connected")
+      }
+    })
   }
 }
