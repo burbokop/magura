@@ -2,6 +2,7 @@ package org.burbokop.utils
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import scala.annotation.tailrec
+import scala.io.Source
 
 object FileUtils {
   @tailrec
@@ -28,6 +29,19 @@ object FileUtils {
       outputChannel.transferFrom(inputChannel, 0, inputChannel.size)
       inputChannel.close()
       Right()
+    } catch {
+      case e => Left(e)
+    }
+  }
+
+  def writeIfDifferent(path: String, data: String): Either[Throwable, Boolean] = {
+    try {
+      if (Source.fromFile(path).mkString != data) {
+        new FileOutputStream(path).write(data.toArray.map(_.toByte))
+        Right(true)
+      } else {
+        Right(false)
+      }
     } catch {
       case e => Left(e)
     }
