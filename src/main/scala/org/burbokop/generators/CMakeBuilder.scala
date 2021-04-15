@@ -1,5 +1,6 @@
 package org.burbokop.generators
 
+import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
 
 import java.io.{File, FileInputStream, FileOutputStream}
@@ -7,7 +8,12 @@ import java.io.{File, FileInputStream, FileOutputStream}
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
 
-  def buildCMake(inputPath: String, outputPath: String): Either[Throwable, Unit] = {
+  def buildCMake(cache: List[RepositoryMetaData], inputPath: String, outputPath: String): Either[Throwable, Unit] = {
+    val activeVersions = cache.map(_.currentVersion).filter(_.isDefined).map(_.get)
+    println(s"buildCMake ($inputPath) activeVersions: $activeVersions")
+    println(s"->: ${activeVersions.map(_.buildPath + File.separator + "headers").mkString(":")}")
+
+
     val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
     if (new File(cmakePath).isFile) {
       val outputFolder = new File(outputPath)
@@ -15,7 +21,12 @@ object CMakeBuilder {
         outputFolder.mkdirs();
       }
       val inputFolder = new File(inputPath)
-      val r0 = sys.process.Process(Seq("cmake", inputFolder.getAbsolutePath), outputFolder).!
+      val r0 = sys.process.Process(
+        Seq("cmake", inputFolder.getAbsolutePath),
+        outputFolder,
+        "CPATH" -> activeVersions.map(_.buildPath + File.separator + "headers").mkString(":"),
+        "CMAKE_PREFIX_PATH" -> (activeVersions.map(_.buildPath) ++ activeVersions.map(_.entryPath)).mkString(":")
+      ).!
       val r1 = sys.process.Process(Seq("make"), outputFolder).!
       if (r0 == 0 && r1 == 0) {
         Right()
@@ -52,8 +63,13 @@ object CMakeBuilder {
 }
 
 class CMakeBuilder extends Generator {
-  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Boolean] = {
-    CMakeBuilder.buildCMake(inputPath, outputPath).fold[Either[Throwable, Boolean]](Left(_), { _ =>
+  override def proceed(
+                        cache: List[RepositoryMetaData],
+                        inputPath: String,
+                        outputPath: String,
+                        maguraFile: MaguraFile
+                      ): Either[Throwable, Boolean] = {
+    CMakeBuilder.buildCMake(cache, inputPath, outputPath).fold[Either[Throwable, Boolean]](Left(_), { _ =>
       CMakeBuilder.copyHeaders(inputPath, outputPath).map(_ => true)
     })
   }

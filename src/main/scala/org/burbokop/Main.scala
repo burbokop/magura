@@ -1,6 +1,9 @@
 package org.burbokop
 
 import org.burbokop.tasks.{ConnectTask, InitTask, InstallTask}
+import org.burbokop.utils.FileUtils
+
+import java.io.File
 
 object Main extends App {
   val help = "Usage: magura [command]\n" +

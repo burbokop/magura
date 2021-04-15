@@ -75,7 +75,12 @@ object CMakeConnector {
 }
 
 class CMakeConnector(builderDistributor: GeneratorDistributor, cacheFolder: String) extends Generator {
-  override def proceed(inputPath: String, outputPath: String, maguraFile: MaguraFile): Either[Throwable, Boolean] = {
+  override def proceed(
+                        cache: List[RepositoryMetaData],
+                        inputPath: String,
+                        outputPath: String,
+                        maguraFile: MaguraFile
+                      ): Either[Throwable, Boolean] = {
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
         connectMetas(metas, outputPath)

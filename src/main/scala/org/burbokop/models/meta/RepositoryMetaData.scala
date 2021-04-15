@@ -1,18 +1,23 @@
 package org.burbokop.models.meta
 
 import org.burbokop.models.meta.RepositoryMetaData.fromJson
+import org.burbokop.utils.FileUtils
 import org.burbokop.utils.SttpUtils.JsonParseException
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
-import java.io.{FileInputStream, FileOutputStream, InputStream}
+import java.io.{File, FileInputStream, FileOutputStream, InputStream}
 
 
 object RepositoryMetaData {
   implicit val format = Json.format[RepositoryMetaData]
 
-  def toJson() = {
-
-  }
+  def fromFolder(f: File, name: String, maxLevel: Int = Int.MaxValue): List[RepositoryMetaData] =
+    FileUtils.recursiveListFiles(f, maxLevel).filter(item => item.isFile && item.getName == name).map { item =>
+      fromJson(item.getPath).toOption
+    }
+      .filter(_.isDefined)
+      .map(_.get)
+      .toList
 
   def fromJson(inputStream: InputStream): Either[Throwable, RepositoryMetaData] = {
     Json.parse(inputStream).validate[RepositoryMetaData] match {
@@ -48,6 +53,9 @@ case class RepositoryMetaData(
     } catch {
       case e => Left(e)
     }
+
+  def currentVersion(): Option[RepositoryVersion] =
+    versions.find(_.commit == currentCommit)
 
   def withVersion(version: RepositoryVersion): RepositoryMetaData =
     RepositoryMetaData(version.commit, this.versions :+ version)

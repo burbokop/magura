@@ -13,9 +13,13 @@ object FileUtils {
   def normalizeFolder(folder: String): String =
     normalizeFolder(new File(folder)).getAbsolutePath
 
-  def recursiveListFiles(f: File): Array[File] = {
-    val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+  def recursiveListFiles(f: File, maxLevel: Int = Int.MaxValue): Array[File] = {
+      if (maxLevel > 0) {
+        val these = f.listFiles
+        these ++ these.filter(_.isDirectory).flatMap(item => recursiveListFiles(item, maxLevel - 1))
+      } else {
+        Array()
+      }
   }
 
   def copyFile(src: String, dest: String): Either[Throwable, Unit] = {

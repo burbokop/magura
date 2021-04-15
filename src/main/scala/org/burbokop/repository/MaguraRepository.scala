@@ -33,9 +33,11 @@ object MaguraRepository {
     }
   }
 
+  val metaFileName = "meta.json"
+
   def get(builderDistributor: GeneratorDistributor, repository: MaguraRepository, cacheFolder: String): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
-    val metaFile = s"$repoFolder${File.separator}meta.json"
+    val metaFile = s"$repoFolder${File.separator}$metaFileName"
     GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
       val meta = RepositoryMetaData.fromJsonDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
@@ -46,16 +48,22 @@ object MaguraRepository {
             val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
             builderDistributor
               .proceed(
+                RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
                 entryFolder,
                 buildFolder,
                 repository.builder.map(MaguraFile.fromBuilder(_))
               )
-              .fold(Left(_), { _ =>
-                meta.withVersion(RepositoryVersion(
-                  branch.commit.sha,
-                  entryFolder,
-                  buildFolder
-                )).writeJsonToFile(metaFile, true)
+              .fold(Left(_), { generatorName =>
+                generatorName.map { generatorName =>
+                  meta.withVersion(RepositoryVersion(
+                    branch.commit.sha,
+                    entryFolder,
+                    buildFolder,
+                    generatorName
+                  )).writeJsonToFile(metaFile, true)
+                } getOrElse {
+                  Right(meta)
+                }
               })
           })
         })

@@ -1,7 +1,7 @@
 package org.burbokop.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.generators.{CMakeBuilder, CMakeConnector, GeneratorDistributor}
+import org.burbokop.generators.{CMakeBuilder, CMakeConnector, ConfigureBuilder, GeneratorDistributor}
 import org.burbokop.utils.FileUtils
 
 import java.io.File
@@ -24,19 +24,20 @@ object ConnectTask extends Task {
     val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
 
     val builderDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeBuilder()
+      "cmake" -> new CMakeBuilder(),
+      "configure" -> new ConfigureBuilder()
     ), _.builder)
 
     val connectorDistributor = new GeneratorDistributor(Map(
       "cmake" -> new CMakeConnector(builderDistributor, cacheFolder)
     ), _.connector)
 
-    connectorDistributor.proceed(input, output).fold({ error =>
+    connectorDistributor.proceed(List(), input, output).fold({ error =>
       println(s"magura connection error: ${error.getMessage}")
-    }, {
-      if(_) {
-        println(s"magura connected")
-      } else {
+    }, { generatorName =>
+      generatorName.map { generatorName =>
+        println(s"magura connected with generator '$generatorName'")
+      } getOrElse {
         println(s"magura already connected")
       }
     })

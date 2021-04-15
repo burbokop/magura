@@ -5,7 +5,8 @@ import play.api.libs.json.Json
 case class RepositoryVersion(
                               commit: String,
                               entryPath: String,
-                              buildPath: String
+                              buildPath: String,
+                              builder: String
                             )
 
 object RepositoryVersion {
