@@ -2,7 +2,7 @@ package org.burbokop.generators
 import org.burbokop.models.meta.RepositoryMetaData
 
 import java.io.File
-
+import io.AnsiColor._
 object ConfigureBuilder {
 
   case class Paths(bin: String, include: String, lib: String)
@@ -13,26 +13,40 @@ object ConfigureBuilder {
         .filter(_.isDefined)
         .map(_.get).map { version =>
         if (version.builder == "configure") {
-          Paths(
-            s"${version.buildPath}${File.separator}bin",
-            s"${version.buildPath}${File.separator}include",
-            s"${version.buildPath}${File.separator}lib"
-          )
+          Some(Paths(
+            new File(s"${version.buildPath}${File.separator}bin").getAbsolutePath,
+            new File(s"${version.buildPath}${File.separator}include").getAbsolutePath,
+            new File(s"${version.buildPath}${File.separator}lib").getAbsolutePath
+          ))
         } else {
-          Paths("", "", "")
+          None
         }
       }
+        .filter(_.isDefined)
+        .map(_.get)
     }
   }
 
+  def createEnvironment(paths: List[Paths], records: (String, Paths => String)*): Seq[(String, String)] =
+    records.map { r =>
+      (
+        r._1, sys.env.get(r._1)
+        .map(_ :: paths.map(r._2))
+        .getOrElse(paths.map(r._2))
+        .mkString(":")
+      )
+    }
+
+
   def build(cache: List[RepositoryMetaData], inputPath: String, outputPath: String): Either[Throwable, Unit] = {
     val paths = Paths.fromCache(cache)
-    println(s"build ($inputPath) paths: $paths")
 
-    def env = Seq(
-      "PATH" -> paths.map(_.bin).mkString(":"),
-      "CPATH" -> paths.map(_.include).mkString(":"),
-      "LD_LIBRARY_PATH" -> paths.map(_.lib).mkString(":")
+    println(s"${MAGENTA}build ($inputPath) paths: $paths$RESET")
+
+    val env = createEnvironment(paths,
+      "PATH" -> (_.bin),
+      "CPATH" -> (_.include),
+      "LD_LIBRARY_PATH" -> (_.lib)
     )
 
     println(s"-> env: $env")

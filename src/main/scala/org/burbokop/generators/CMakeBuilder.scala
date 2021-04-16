@@ -1,18 +1,23 @@
 package org.burbokop.generators
 
+import org.burbokop.generators.ConfigureBuilder.{Paths, createEnvironment}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
 
 import java.io.{File, FileInputStream, FileOutputStream}
+import scala.io.AnsiColor.{MAGENTA, RESET}
 
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
 
   def buildCMake(cache: List[RepositoryMetaData], inputPath: String, outputPath: String): Either[Throwable, Unit] = {
-    val activeVersions = cache.map(_.currentVersion).filter(_.isDefined).map(_.get)
-    println(s"buildCMake ($inputPath) activeVersions: $activeVersions")
-    println(s"->: ${activeVersions.map(_.buildPath + File.separator + "headers").mkString(":")}")
-
+    val paths = Paths.fromCache(cache)
+    val env = createEnvironment(paths,
+      "PATH" -> (_.bin),
+      "CPATH" -> (_.include),
+      "LD_LIBRARY_PATH" -> (_.lib)
+    )
+    println(s"buildCMake ($inputPath) activeVersions: $env")
 
     val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
     if (new File(cmakePath).isFile) {
@@ -21,13 +26,8 @@ object CMakeBuilder {
         outputFolder.mkdirs();
       }
       val inputFolder = new File(inputPath)
-      val r0 = sys.process.Process(
-        Seq("cmake", inputFolder.getAbsolutePath),
-        outputFolder,
-        "CPATH" -> activeVersions.map(_.buildPath + File.separator + "headers").mkString(":"),
-        "CMAKE_PREFIX_PATH" -> (activeVersions.map(_.buildPath) ++ activeVersions.map(_.entryPath)).mkString(":")
-      ).!
-      val r1 = sys.process.Process(Seq("make"), outputFolder).!
+      val r0 = sys.process.Process(Seq("cmake", inputFolder.getAbsolutePath), outputFolder, env:_*).!
+      val r1 = sys.process.Process(Seq("make"), outputFolder, env:_*).!
       if (r0 == 0 && r1 == 0) {
         Right()
       } else {
