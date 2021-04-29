@@ -11,7 +11,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: "r0ptAZ8k6IDE0p1dW1wAzZlbDlg1xg85tgUplvvnN+rL0/yQOaHw2zlW9Vny23r01HFv0naRzM6iqWk0UwBCFB3K4Aej+fyUpDOpbYU2+X03DdL1nSfz+iuMqzY7SP1C/p6ozZRGOwscWk5iuikPpQae4WRrSOVK2f6OMjukxGIERaJjWDQ2/73plsEqICjOw7bLrxn6mv0vQ3xAyHhyziUU5vbv5S0RoN8OLumNu/u+Q9u2wwXnEtGPHytpYtdh5NQ2Kf2RaVbnASlNwjEEjzwTrVwnE1fNqHgaj8GYwvtdyfNplUrf0Mgj9dJyHXUzrkVYlJpUgG8BthtgEN5yrggv6cG4g1OBSsRkT9RVNe4lcTKtSvY+40qd5cVwBGdh2l8QIGTcWkBBkbLK0sXtjOYoubommBqSuzNb4jBMtcTVBL/bC4JFbXmODz79ji7HR7el8q5a8YvZRkKM7BqwcVtgcSOlX97I2nMnyamee5EIrMgvaXFgrX/XMadgiSBAlpDLuxquv9lzn45xK0ejcvU7ahLg7H/orjHEFwBCUBcR3tO1klnfSDTfGCoAy/V//SP+r4l40+/prN9yGbPbPYegHPab+fJO/14ZVicBOxBGvj0Hj4aHT0KMMsxfjaZM3aciuejKQ8LoyWe6QCAhHhw3Oe25HUemE/NsL2TjuHo="
+    secure: '$GITHUB_API_KEY'
   file: $MAGURA_DEB
   tag_name: $MAGURA_TAG
   skip_cleanup: true
