@@ -4,6 +4,7 @@ scala:
   - 2.13.5
 
 script:
+  - sudo apt install fakeroot
   - sbt assembly
   - sbt debian:packageBin
   - source ./scripts/grab_release.sh
