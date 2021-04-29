@@ -1,5 +1,7 @@
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageMapping
 import com.typesafe.sbt.packager.linux.LinuxSymlink
+import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
+import sttp.client3.{HttpURLConnectionBackend, UriContext, asString, basicRequest}
 
 name := "magura"
 
@@ -32,8 +34,6 @@ lazy val root = (project in file(".")).
 
 linuxPackageMappings := {
   def getRepositoryReleaseTags(user: String, repo: String): Either[String, List[String]] = {
-    import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
-    import sttp.client3.{HttpURLConnectionBackend, UriContext, asString, basicRequest}
     basicRequest
       .header("Accept", "application/vnd.github.v3+json")
       .get(uri"https://api.github.com/repos/$user/$repo/releases")
