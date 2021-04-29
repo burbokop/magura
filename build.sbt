@@ -50,9 +50,6 @@ linuxPackageMappings := {
   val needRelease = getRepositoryReleaseTags("burbokop", "magura")
     .fold(_ => false, _.find(_ == currentReleaseTag).isEmpty)
 
-  System.setProperty("PROP0", needRelease.toString)
-
-
   import java.io.{File, FileOutputStream}
   val jar = (assemblyOutputPath in assembly).value.file
   val bin = new File(s"${target.value.getPath}${File.separator}${jar.name}.sh")
