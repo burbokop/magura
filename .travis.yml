@@ -1,20 +1,20 @@
 language: scala
-
 scala:
-  - 2.13.5
-
+- 2.13.5
 script:
-  - sudo apt-get -y install fakeroot
-  - sbt assembly
-  - sbt debian:packageBin
-  - source ./scripts/grab_release.sh
+- sudo apt-get -y install fakeroot
+- sbt assembly
+- sbt debian:packageBin
+- source ./scripts/grab_release.sh
+
 
 deploy:
   provider: releases
   api_key:
-    secure: "H26mw8Dz0zq2aVHvUi286tkyZB7T4IF1PlTdXKrEVEjfU1yQYzgZGbC87A1r6bBxDQzcCkobykqbUb++F71wtK42FO7ag7klL06VIzbeKF4YuoCWf9aREkPuJcfs9ex10XIQ6GzI5lQK8Z/gbBS4sC4Y8BqqIcTFOWpWEg0mHBQ4H7ObySZAv28Gc4KcKGu1QD465lu7ufm0GgMyr55HCBCp7qCaKUf922aV/JA+72ygcT8lvmS10OpXp3aRyo3DOudMElXKdHj/EN2CFi9Dx1joxGX1o0zr3h45mhqbRa0hGmVYqhrtHD1PckbAycD4SnSU1Hq7QoZg8NoTVqf8vkgIOdsjL/N+XKVDxVgkiJzBlZ4q3WMkWdxaILnyxLZm66oxM/lm8HJ20bUU/kAqlnxcUgHrKWK28I00wobteCMnd6Iml2BybpdumV+HkAcDsEOgp/YqXTZfAEw+NUmhdRX16Vb2Z0tOVou9cXEPgaHnfjqNSpycsior7oJQE8DMXQpxE7Py432YoxfXyYGMlqQ08kcJWHb/KjjFdufHA7wcytaDMRrAJSVpSxCAKYuNVRPuVaJnBZ957o9coteM9iQwnS9gBw8o1/MR/E2WRhRuStvznrYLAOCEgMGv3JIhVEeEiVKcwRulHxegqlS5v+wuvdTG8f63cjtzu3RGAbY="
+    secure: qv8/CHxuKumf/UL8vSY3SJOClE7SItMkjOrEK0k4a5QbzTKC7QtgNIoI4ODa99uMTAo8PhSdmIxNOPQzpv6KhG+2k/oI+/tJ5kwMmf6vJM7+SzROIynPe1asWILRathdct3/bAU0kpzJE4q1NSXq/fvjLvbVfcEp9N+Lh5ESCvQq3OcWhjkuV/jJeX1s5GNpM7ddsycxoeF0wO20KA4lvf2rX1AaeZCNEbwDcyyDnQa8F2WMC7OCVYcfy0BeUUo0E9tk5EAEs5FTn+Yr5YIT1U7fsVzbjRJGaNqGvObmg0bYXdUrxq/pzHduLsglEWy1SZfkIGkVAXhWi4WET+m9ZNiltqJ6ci5hnEV20mpUh54qy6Jof8Z3yWoiz1lbqhNlHLW0o9NpOE7mYYqXKS1pnG075MpXvegIYE/hy2ttJf5WR6twi8qKQjkNbXvQMnvhNHAjmyGjhVgE/u/9WXjcczHG+rLluUnvSwax9W1kUajhxMv2SK2l+pOavSrI6ky08KGbvvmVqxQCN2IAwbZ03kyar2F3Z7L4wbz+phK8bPSTdRMzRJ5N7Ga644T8asdF8R3BScSyMexsnaR9N1IMwx8lCNS4N8fMJiEejAExcsBNtk/80Dcz1CoYcEKJ6ggMt/XR6CqeXsvHcYpbDhUtGq09UehTbjYs7J2IihfytWo=
   file: $MAGURA_DEB
   tag_name: $MAGURA_TAG
   skip_cleanup: true
   on:
     condition: $MAGURA_NEED_RELEASE = true
+
