@@ -1,0 +1,19 @@
+language: scala
+
+scala:
+  - 2.13.5
+
+before_deploy:
+  - sbt assembly
+  - sbt debian:packageBin
+  - source ./scripts/grab_release.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "e94+KKuBGkVxZZH3/3Cn/ydbfem78nIEY9BcfBcqZOgxNnB1LBVcH48enLusa+C/TX94las8UwQiE0Gq3oS5e9jcxJ0Ff8rPGo+LtPMYBZ4aqQAnAtUyYQ6RlnKuFgvPYWReulasRR5bo+OfbmMcnF0bZdFWKxzsA8jDGi2XfhHSBSTZjk1XEcKRF7mZiKDRlijWSE6jtCZ3RIvZ1zyJbnXibFi+joIYSj+Movct3g34ne/aguOtAEYFaKGDLKjp0duoRxgqRxYhSpSGhWAtf5P8nuZ7l1M3pKRwLRb2TDzCDo0DR9cTDdE+a9GKQ1o8We/emBfNL4eQVrPqYHDp9qgyCLB9WHnMWkk2w6q9QPkQ5Lu6TkQn/s8AlkX53dADZbeWHaJNjHuoXfMjhRWla5dvIcn9sK2CbblRqgIZX8uitC0shqsirXl4xxjVsBQ3sO9mcgdM//CiTkM4rLLhTXOKd9BbXWOxuVGrbwiS+tCJQGZLuA7Y3lc39iKXTReW+7OTfoRsA1qtKNUSsrz3cmzXctP+XBHxX36ujwhdr/qZty89JkK6ks6pcDKWH5jNdGO8hG6KI6iIckr7ktbZKafmOragVBrbu/4AkCLU4e7Ji+2w9iHb1FQoHrYVhhs2W1od49qXfRlqTOajKEYXmB+1vWt70YdqnjwfPgn0wZI="
+  file: $MAGURA_DEB
+  tag_name: $MAGURA_TAG
+  skip_cleanup: true
+  on:
+    condition: $MAGURA_NEED_RELEASE = true

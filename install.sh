@@ -2,4 +2,5 @@
 
 sbt assembly
 sbt debian:packageBin
-sudo dpkg -i ./target/magura_0.1.2_all.deb
+source ./scripts/grab_release.sh
+sudo dpkg -i $MAGURA_DEB

@@ -28,14 +28,44 @@ lazy val root = (project in file(".")).
     buildInfoPackage := "maguraApp"
   )
 
+
+
 linuxPackageMappings := {
+  def getRepositoryReleaseTags(user: String, repo: String): Either[String, List[String]] = {
+    import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
+    import sttp.client3.{HttpURLConnectionBackend, UriContext, asString, basicRequest}
+    basicRequest
+      .header("Accept", "application/vnd.github.v3+json")
+      .get(uri"https://api.github.com/repos/$user/$repo/releases")
+      .response(asString).send(HttpURLConnectionBackend())
+      .body.fold[Either[String, List[String]]](Left(_), data =>
+      Json.parse(data).validate[List[JsObject]] match {
+        case JsError(errors) => Left(errors.toString)
+        case JsSuccess(value, _) => Right(value.map(_.value("tag_name").toString))
+      }
+    )
+  }
+
+  val currentReleaseTag = s"v${version.value.toString}"
+  val needRelease = getRepositoryReleaseTags("burbokop", "magura")
+    .fold(_ => false, _.find(_ == currentReleaseTag).isEmpty)
+
+  System.setProperty("PROP0", needRelease.toString)
+
+
   import java.io.{File, FileOutputStream}
   val jar = (assemblyOutputPath in assembly).value.file
   val bin = new File(s"${target.value.getPath}${File.separator}${jar.name}.sh")
+  val releaseInfo = new File(s"${target.value.getPath}${File.separator}release.info")
   new FileOutputStream(bin.getPath).write(
-    s"""|
-        |#!/bin/sh
+    s"""|#!/bin/sh
         |java -jar /usr/share/magura/lib/${jar.name} $$@
+     """.stripMargin.toArray.map(_.toByte))
+
+  new FileOutputStream(releaseInfo.getPath).write(
+    s"""|tag_name = $currentReleaseTag
+        |need_release = $needRelease
+        |deb = ./target/${packageName.value}_${version.value}_all.deb
      """.stripMargin.toArray.map(_.toByte))
 
   val cmakeConfig = sourceDirectory.value / "main" / "resources" / "magura-config.cmake"

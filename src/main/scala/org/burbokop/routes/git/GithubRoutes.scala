@@ -1,7 +1,7 @@
 package org.burbokop.routes.git
 
 import org.burbokop.utils.SttpUtils
-import org.burbokop.models.git.GithubBranch
+import org.burbokop.models.git.{GithubBranch, GithubRelease}
 import sttp.client3.{HttpURLConnectionBackend, UriContext, asByteArray, asString, basicRequest}
 
 object GithubRoutes {
@@ -37,4 +37,11 @@ object GithubRoutes {
       .send(HttpURLConnectionBackend())
   }
 
+  def getRepositoryReleases(user: String, repo: String) = {
+    basicRequest
+      .header("Accept", "application/vnd.github.v3+json")
+      .get(uri"https://api.github.com/repos/$user/$repo/releases")
+      .response(SttpUtils.as[List[GithubRelease]])
+      .send(HttpURLConnectionBackend())
+  }
 }
