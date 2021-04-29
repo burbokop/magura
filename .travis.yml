@@ -3,7 +3,7 @@ language: scala
 scala:
   - 2.13.5
 
-before_deploy:
+script:
   - sbt assembly
   - sbt debian:packageBin
   - source ./scripts/grab_release.sh
