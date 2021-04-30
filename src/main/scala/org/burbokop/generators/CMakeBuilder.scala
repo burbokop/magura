@@ -4,8 +4,7 @@ import org.burbokop.generators.ConfigureBuilder.{Paths, createEnvironment}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
 
-import java.io.{File, FileInputStream, FileOutputStream}
-import scala.io.AnsiColor.{MAGENTA, RESET}
+import java.io.File
 
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
