@@ -5,10 +5,10 @@ scala:
 script:
   - sbt "run generate-release-info burbokop.magura"
   - source ./scripts/grab_release.sh
+  - sudo apt-get -y install fakeroot
 
 before_deploy:
   - sbt assembly
-  - sudo apt-get -y install fakeroot
   - sbt debian:packageBin
 
 deploy:
