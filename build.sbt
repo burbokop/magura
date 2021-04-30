@@ -47,7 +47,10 @@ linuxPackageMappings := {
   }
 
   val currentReleaseTag = s"v${version.value.toString}"
-  val needRelease = getRepositoryReleaseTags("burbokop", "magura")
+  val tags = getRepositoryReleaseTags("burbokop", "magura")
+  println(s"tags: $tags")
+  println(s"currentReleaseTag: $currentReleaseTag")
+  val needRelease = tags
     .fold(_ => false, _.find(_ == currentReleaseTag).isEmpty)
 
   import java.io.{File, FileOutputStream}
