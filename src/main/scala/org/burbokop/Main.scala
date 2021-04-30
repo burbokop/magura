@@ -11,8 +11,6 @@ import java.io.File
 
 
 object Main extends App {
-
-
   val help = "Usage: magura [command]\n" +
     "Commands:\n" +
     "\tinstall  --  Installs package to cache\n" +
