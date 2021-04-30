@@ -59,10 +59,12 @@ linuxPackageMappings := {
         |java -jar /usr/share/magura/lib/${jar.name} $$@
      """.stripMargin.toArray.map(_.toByte))
 
+  val currentDirectory = new java.io.File(".").getCanonicalPath
+
   new FileOutputStream(releaseInfo.getPath).write(
     s"""|tag_name = $currentReleaseTag
         |need_release = $needRelease
-        |deb = ./target/${packageName.value}_${version.value}_all.deb
+        |deb = $currentDirectory${File.separator}target${File.separator}${packageName.value}_${version.value}_all.deb
      """.stripMargin.toArray.map(_.toByte))
 
   val cmakeConfig = sourceDirectory.value / "main" / "resources" / "magura-config.cmake"
