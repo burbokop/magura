@@ -41,7 +41,7 @@ linuxPackageMappings := {
       .body.fold[Either[String, List[String]]](Left(_), data =>
       Json.parse(data).validate[List[JsObject]] match {
         case JsError(errors) => Left(errors.toString)
-        case JsSuccess(value, _) => Right(value.map(_.value("tag_name").toString))
+        case JsSuccess(value, _) => Right(value.map(_.value("tag_name").validate[String].toString))
       }
     )
   }
