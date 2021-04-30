@@ -52,6 +52,7 @@ linuxPackageMappings := {
   println(s"currentReleaseTag: $currentReleaseTag")
   val needRelease = tags
     .fold(_ => false, _.find(_ == currentReleaseTag).isEmpty)
+  println(s"needRelease: $needRelease")
 
   import java.io.{File, FileOutputStream}
   val jar = (assemblyOutputPath in assembly).value.file
