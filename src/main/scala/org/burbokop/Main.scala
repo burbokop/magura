@@ -2,6 +2,7 @@ package org.burbokop
 
 import org.burbokop.tasks.{ConnectTask, InitTask, InstallTask}
 
+
 object Main extends App {
   val help = "Usage: magura [command]\n" +
     "Commands:\n" +
