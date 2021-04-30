@@ -1,11 +1,15 @@
 language: scala
 scala:
-- 2.13.5
+  - 2.13.5
+
 script:
-- sudo apt-get -y install fakeroot
-- sbt assembly
-- sbt debian:packageBin
-- source ./scripts/grab_release.sh
+  - sbt "run generate-release-info burbokop.magura"
+  - source ./scripts/grab_release.sh
+
+before_deploy:
+  - sbt assembly
+  - sudo apt-get -y install fakeroot
+  - sbt debian:packageBin
 
 deploy:
   provider: releases

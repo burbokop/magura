@@ -26,8 +26,10 @@ object MaguraRepository {
       } else if(parts2.length == 1) {
         Right(MaguraRepository(parts(0), parts(1), parts2(0), None))
       } else {
-        Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch}:{builder(optional)} but got '$string'"))
+        Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch(default = master)}:{builder(optional)} but got '$string'"))
       }
+    } else if(parts.length == 2) {
+      Right(MaguraRepository(parts(0), parts(1), "master", None))
     } else {
       Left(MaguraRepository.Error(s"repo should be {user}.{repo}.{branch}:{builder(optional)} but got '$string'"))
     }
