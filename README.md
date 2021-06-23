@@ -2,4 +2,4 @@
 
 
 # Installation on debian based os
-In repo root: `./scripts/install.sh` (need root permissions)
+In repo root: `sudo ./scripts/install.sh`
