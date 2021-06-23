@@ -10,6 +10,9 @@ script:
 before_deploy:
   - sbt assembly
   - sbt debian:packageBin
+  - echo $MAGURA_DEB
+  - ls -l $MAGURA_DEB
+  - ls
 
 deploy:
   provider: releases
