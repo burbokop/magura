@@ -7,6 +7,7 @@ script:
   - source ./scripts/grab_release.sh
   - sudo apt-get -y install fakeroot
 
+
 before_deploy:
   - sbt assembly
   - sbt debian:packageBin
