@@ -21,7 +21,7 @@ object GenerateReleaseInfo extends Task {
           new FileOutputStream(releaseInfo.getPath).write(
             s"""|tag_name = $currentReleaseTag
                 |need_release = $needRelease
-                |deb = ${buildInfo.target.getName}${File.separator}${buildInfo.packageName}_${buildInfo.version}_all.deb
+                |deb = ${buildInfo.target.getPath}${File.separator}${buildInfo.packageName}_${buildInfo.version}_all.deb
              """.stripMargin.toArray.map(_.toByte))
         }
       println(result)
