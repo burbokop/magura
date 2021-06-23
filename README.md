@@ -1,5 +1,5 @@
-# magura
+# Magura
 
 
-# installation
-In repo root: `./scripts/install.sh`
+# Installation on debian based os
+In repo root: `./scripts/install.sh` (need root permissions)
