@@ -7,7 +7,7 @@ script:
   - source ./scripts/grab_release.sh
   - sudo apt-get -y install fakeroot
   - echo $MAGURA_DEB
-  - ls -l $MAGURA_DEB
+  - ls -l ./target
   - ls
 
 before_deploy:
