@@ -7,13 +7,12 @@ script:
   - source ./scripts/grab_release.sh
   - sudo apt-get -y install fakeroot
 
-
 before_deploy:
   - sbt assembly
   - sbt debian:packageBin
   - echo $MAGURA_DEB
   - ls -l ./target
-  - ls
+  - pwd
 
 deploy:
   provider: releases
