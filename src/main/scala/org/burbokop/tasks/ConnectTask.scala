@@ -3,6 +3,7 @@ package org.burbokop.tasks
 import com.concurrentthought.cla._
 import org.burbokop.generators.{CMakeBuilder, CMakeConnector, ConfigureBuilder, GeneratorDistributor}
 import org.burbokop.utils.FileUtils
+import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
 
@@ -22,6 +23,7 @@ object ConnectTask extends Task {
     val output = FileUtils.normalizeFolder(parsedArgs.get[String]("output").get)
 
     val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
+    val mainVirtualSystem = new VirtualSystem(System.getenv("HOME") + File.separator + ".magura/vsys")
 
     val builderDistributor = new GeneratorDistributor(Map(
       "cmake" -> new CMakeBuilder(),
@@ -32,7 +34,7 @@ object ConnectTask extends Task {
       "cmake" -> new CMakeConnector(builderDistributor, cacheFolder)
     ), _.connector)
 
-    connectorDistributor.proceed(List(), input, output).fold({ error =>
+    connectorDistributor.proceed(List(), Some(mainVirtualSystem), input, output, None).fold({ error =>
       println(s"magura connection error: ${error.getMessage}")
     }, { generatorName =>
       generatorName.map { generatorName =>

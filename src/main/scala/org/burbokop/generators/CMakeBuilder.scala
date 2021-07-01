@@ -3,19 +3,38 @@ package org.burbokop.generators
 import org.burbokop.generators.ConfigureBuilder.{Paths, createEnvironment}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
+import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
+import scala.Console.{GREEN, YELLOW}
+import scala.io.AnsiColor.{MAGENTA, RESET}
 
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)
 
-  def buildCMake(cache: List[RepositoryMetaData], inputPath: String, outputPath: String): Either[Throwable, Unit] = {
+  def buildCMake(
+                  cache: List[RepositoryMetaData],
+                  virtualSystem: Option[VirtualSystem],
+                  inputPath: String,
+                  outputPath: String,
+                ): Either[Throwable, Unit] = {
+
+    virtualSystem.map { vs =>
+      println(s"${YELLOW}vs.installLatestVersionRepositories(cache): ${vs.installLatestVersionRepositories(cache)}$RESET")
+    }
+
+    println(s"${GREEN}build: $inputPath, cache: $cache$RESET")
+
     val paths = Paths.fromCache(cache)
-    val env = createEnvironment(paths,
-      "PATH" -> (_.bin),
-      "CPATH" -> (_.include),
-      "LD_LIBRARY_PATH" -> (_.lib)
-    )
+    val env = virtualSystem.map { vs =>
+      vs.env
+    } getOrElse {
+      createEnvironment(paths,
+        "PATH" -> (_.bin),
+        "CPATH" -> (_.include),
+        "LD_LIBRARY_PATH" -> (_.lib)
+      )
+    }
     println(s"buildCMake ($inputPath) activeVersions: $env")
 
     val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
@@ -64,11 +83,12 @@ object CMakeBuilder {
 class CMakeBuilder extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
+                        virtualSystem: Option[VirtualSystem],
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
-    CMakeBuilder.buildCMake(cache, inputPath, outputPath).fold[Either[Throwable, Boolean]](Left(_), { _ =>
+    CMakeBuilder.buildCMake(cache, virtualSystem, inputPath, outputPath).fold[Either[Throwable, Boolean]](Left(_), { _ =>
       CMakeBuilder.copyHeaders(inputPath, outputPath).map(_ => true)
     })
   }

@@ -4,6 +4,7 @@ import org.burbokop.generators.{GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.routes.git.GithubRoutes
 import org.burbokop.utils.ZipUtils
+import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.{ByteArrayInputStream, File}
 
@@ -37,7 +38,12 @@ object MaguraRepository {
 
   val metaFileName = "meta.json"
 
-  def get(builderDistributor: GeneratorDistributor, repository: MaguraRepository, cacheFolder: String): Either[Throwable, RepositoryMetaData] = {
+  def get(
+           builderDistributor: GeneratorDistributor,
+           repository: MaguraRepository,
+           cacheFolder: String,
+           virtualSystem: Option[VirtualSystem]
+         ): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}$metaFileName"
     GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
@@ -51,6 +57,7 @@ object MaguraRepository {
             builderDistributor
               .proceed(
                 RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
+                virtualSystem,
                 entryFolder,
                 buildFolder,
                 repository.builder.map(MaguraFile.fromBuilder(_))
@@ -75,9 +82,14 @@ object MaguraRepository {
     })
   }
 
-  def get(builderDistributor: GeneratorDistributor, repos: List[MaguraRepository], cacheFolder: String): Either[Throwable, List[RepositoryMetaData]] =
+  def get(
+           builderDistributor: GeneratorDistributor,
+           repos: List[MaguraRepository],
+           cacheFolder: String,
+           virtualSystem: Option[VirtualSystem]
+         ): Either[Throwable, List[RepositoryMetaData]] =
     (repos
-      .map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder))
+      .map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder, virtualSystem))
       .partition(_.isLeft) match {
       case (Nil,  ints) => Right(for(Right(i) <- ints) yield i)
       case (strings, _) => Left(for(Left(s) <- strings) yield s)

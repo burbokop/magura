@@ -4,8 +4,11 @@ import org.burbokop.generators.CMakeConnector.connectMetas
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
+import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
+import scala.Console.{GREEN, YELLOW}
+import scala.io.AnsiColor.RESET
 import scala.language.{implicitConversions, postfixOps}
 
 object CMakeConnector {
@@ -58,7 +61,44 @@ object CMakeConnector {
     }
   }
 
-  def connectMetas(metas: List[RepositoryMetaData], outputPath: String): Either[Throwable, Boolean] = {
+  def connectMetas(
+                    metas: List[RepositoryMetaData],
+                    outputPath: String,
+                    virtualSystem: Option[VirtualSystem]
+                  ): Either[Throwable, Boolean] = {
+    virtualSystem.map { vs =>
+      println(s"${YELLOW}vs.installLatestVersionRepositories(cache): ${vs.installLatestVersionRepositories(metas)}$RESET")
+    }
+
+    println(s"${GREEN}connect: $outputPath, cache: $metas$RESET")
+
+    // configure: /home/borys/.magura/repos/libsdl-org/SDL/libsdl-org-SDL-39302c9/
+    // cache: Nil
+
+    // configure: /home/borys/.magura/repos/libsdl-org/SDL_ttf/libsdl-org-SDL_ttf-9363bd0/
+    // cache:
+    //    RepositoryMetaData(39302c921445e9f695a72469be17ba041f6f09db,List(
+    //      RepositoryVersion(39302c921445e9f695a72469be17ba041f6f09db,/home/borys/.magura/repos/libsdl-org/SDL/libsdl-org-SDL-39302c9/,/home/borys/.magura/repos/libsdl-org/SDL/build_libsdl-org-SDL-39302c9/,configure))
+    //    ))
+
+    // configure: /home/borys/.magura/repos/ferzkopp/SDL_gfx/ferzkopp-SDL_gfx-0df23ee/
+    // cache:
+    //    RepositoryMetaData(39302c921445e9f695a72469be17ba041f6f09db,List(
+    //      RepositoryVersion(39302c921445e9f695a72469be17ba041f6f09db,/home/borys/.magura/repos/libsdl-org/SDL/libsdl-org-SDL-39302c9/,/home/borys/.magura/repos/libsdl-org/SDL/build_libsdl-org-SDL-39302c9/,configure)
+    //    )),
+    //    RepositoryMetaData(9363bd0f3b10aad5aaf73a63b9d085aba7ef7098,List(
+    //      RepositoryVersion(9363bd0f3b10aad5aaf73a63b9d085aba7ef7098,/home/borys/.magura/repos/libsdl-org/SDL_ttf/libsdl-org-SDL_ttf-9363bd0/,/home/borys/.magura/repos/libsdl-org/SDL_ttf/build_libsdl-org-SDL_ttf-9363bd0/,configure))
+    //    ))
+
+    // build: /home/borys/.magura/repos/burbokop/SPM/burbokop-SPM-d3c51f5/
+    // cache:
+    //    RepositoryMetaData(39302c921445e9f695a72469be17ba041f6f09db,List(
+    //      RepositoryVersion(39302c921445e9f695a72469be17ba041f6f09db,/home/borys/.magura/repos/libsdl-org/SDL/libsdl-org-SDL-39302c9/,/home/borys/.magura/repos/libsdl-org/SDL/build_libsdl-org-SDL-39302c9/,configure)
+    //    )),
+    //    RepositoryMetaData(9363bd0f3b10aad5aaf73a63b9d085aba7ef7098,List(
+    //      RepositoryVersion(9363bd0f3b10aad5aaf73a63b9d085aba7ef7098,/home/borys/.magura/repos/libsdl-org/SDL_ttf/libsdl-org-SDL_ttf-9363bd0/,/home/borys/.magura/repos/libsdl-org/SDL_ttf/build_libsdl-org-SDL_ttf-9363bd0/,configure))
+    //    ))
+
     val projects = (for(m <- metas) yield {
       m.versions.find(_.commit == m.currentCommit).map { version =>
         Project(findLibraries(new File(version.buildPath)), version.buildPath)
@@ -74,16 +114,20 @@ object CMakeConnector {
   }
 }
 
-class CMakeConnector(builderDistributor: GeneratorDistributor, cacheFolder: String) extends Generator {
+class CMakeConnector(
+                      builderDistributor: GeneratorDistributor,
+                      cacheFolder: String,
+                    ) extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
+                        virtualSystem: Option[VirtualSystem],
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
-    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
+    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder, virtualSystem)
       .fold(Left(_), { metas =>
-        connectMetas(metas, outputPath)
+        connectMetas(metas, outputPath, virtualSystem)
       })
   }
 }

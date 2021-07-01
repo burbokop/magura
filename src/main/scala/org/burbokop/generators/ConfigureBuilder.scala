@@ -1,15 +1,17 @@
 package org.burbokop.generators
 import org.burbokop.models.meta.RepositoryMetaData
+import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
 import io.AnsiColor._
+import scala.Console.GREEN
 object ConfigureBuilder {
 
   case class Paths(bin: String, include: String, lib: String)
   object Paths {
     def fromCache(cache: List[RepositoryMetaData]) = {
       cache
-        .map(_.currentVersion)
+        .map(_.latestVersion)
         .filter(_.isDefined)
         .map(_.get).map { version =>
         if (version.builder == "configure") {
@@ -38,16 +40,40 @@ object ConfigureBuilder {
     }
 
 
-  def build(cache: List[RepositoryMetaData], inputPath: String, outputPath: String): Either[Throwable, Unit] = {
+  def build(
+             cache: List[RepositoryMetaData],
+             virtualSystem: Option[VirtualSystem],
+             inputPath: String,
+             outputPath: String
+           ): Either[Throwable, Unit] = {
+
+    virtualSystem.map { vs =>
+      println(s"vs.installLatestVersionRepositories(cache): ${vs.installLatestVersionRepositories(cache)}")
+    }
+
+    println(s"${GREEN}configure: $inputPath, cache: $cache$RESET")
+
     val paths = Paths.fromCache(cache)
 
     println(s"${MAGENTA}build ($inputPath) paths: $paths$RESET")
 
-    val env = createEnvironment(paths,
+    val env = virtualSystem.map { vs =>
+      vs.env
+    } getOrElse {
+      createEnvironment(paths,
+        "PATH" -> (_.bin),
+        "CPATH" -> (_.include),
+        "LD_LIBRARY_PATH" -> (_.lib)
+      )
+    }
+
+    val a = createEnvironment(paths,
       "PATH" -> (_.bin),
       "CPATH" -> (_.include),
       "LD_LIBRARY_PATH" -> (_.lib)
     )
+    println(s"-> prev env: $a")
+    println(s"-> prev env: $a")
 
     println(s"-> env: $env")
 
@@ -66,6 +92,8 @@ object ConfigureBuilder {
       val r1 = sys.process.Process(Seq("make", "install"), inputFolder, env:_*).!
       if (r0 == 0 && r1 == 0) {
         Right()
+
+
       } else {
         Left(CMakeBuilder.Error(s"error code: $r0, $r1"))
       }
@@ -78,10 +106,11 @@ object ConfigureBuilder {
 class ConfigureBuilder extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
+                        virtualSystem: Option[VirtualSystem],
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
-    ConfigureBuilder.build(cache, inputPath, outputPath).map(_ => true)
+    ConfigureBuilder.build(cache, virtualSystem, inputPath, outputPath).map(_ => true)
   }
 }

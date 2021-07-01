@@ -59,6 +59,8 @@ resolvers ++= Seq(
 libraryDependencies += "com.softwaremill.sttp.client3" %% "core" % "3.1.7"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
 libraryDependencies ++= Seq("org.yaml" % "snakeyaml" % "1.16")
+libraryDependencies += "commons-io" % "commons-io" % "2.6"
+
 
 libraryDependencies ++= Seq(
   "com.concurrentthought.cla" %% "command-line-arguments"          % "0.6.0",

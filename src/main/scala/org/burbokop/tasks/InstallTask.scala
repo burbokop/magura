@@ -20,7 +20,7 @@ object InstallTask extends Task {
         println(s"installing: github.com/${repository.user}/${repository.name} (branch: ${repository.branchName}, builder: ${repository.builder.getOrElse("<default>")})")
         val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
         val builderDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeBuilder()), _.builder)
-        MaguraRepository.get(builderDistributor, repository, cacheFolder).fold({ err =>
+        MaguraRepository.get(builderDistributor, repository, cacheFolder, None).fold({ err =>
           println(s"error: $err")
           Left(err)
         }, { message =>

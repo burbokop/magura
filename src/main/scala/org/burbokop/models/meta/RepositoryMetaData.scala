@@ -54,7 +54,7 @@ case class RepositoryMetaData(
       case e => Left(e)
     }
 
-  def currentVersion(): Option[RepositoryVersion] =
+  def latestVersion(): Option[RepositoryVersion] =
     versions.find(_.commit == currentCommit)
 
   def withVersion(version: RepositoryVersion): RepositoryMetaData =
