@@ -1,6 +1,6 @@
 package org.burbokop.utils
 
-import java.io.{File, FileInputStream, FileOutputStream, IOException}
+import java.io.{File, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.nio
 import scala.annotation.tailrec
 import scala.io.Source
@@ -15,12 +15,12 @@ object FileUtils {
     normalizeFolder(new File(folder)).getAbsolutePath
 
   def recursiveListFiles(f: File, maxLevel: Int = Int.MaxValue): Array[File] = {
-      if (maxLevel > 0) {
-        val these = f.listFiles
-        these ++ these.filter(_.isDirectory).flatMap(item => recursiveListFiles(item, maxLevel - 1))
-      } else {
-        Array()
-      }
+    if (maxLevel > 0) {
+      val these = f.listFiles
+      these ++ these.filter(_.isDirectory).flatMap(item => recursiveListFiles(item, maxLevel - 1))
+    } else {
+      Array()
+    }
   }
 
   def copyFile(src: String, dest: String): Either[Throwable, Unit] = {
@@ -72,7 +72,11 @@ object FileUtils {
 
   def writeIfDifferent(path: String, data: String): Either[Throwable, Boolean] = {
     try {
-      if (Source.fromFile(path).mkString != data) {
+      if (try {
+        Source.fromFile(path).mkString != data
+      } catch {
+        case _: FileNotFoundException => true
+      }) {
         new FileOutputStream(path).write(data.toArray.map(_.toByte))
         Right(true)
       } else {

@@ -39,13 +39,13 @@ object CMakeBuilder {
 
     val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
     if (new File(cmakePath).isFile) {
-      val outputFolder = new File(outputPath)
-      if (!outputFolder.exists()) {
-        outputFolder.mkdirs();
+      val libOutputFolder = new File(outputPath + File.separator + "lib")
+      if (!libOutputFolder.exists()) {
+        libOutputFolder.mkdirs();
       }
       val inputFolder = new File(inputPath)
-      val r0 = sys.process.Process(Seq("cmake", inputFolder.getAbsolutePath), outputFolder, env:_*).!
-      val r1 = sys.process.Process(Seq("make"), outputFolder, env:_*).!
+      val r0 = sys.process.Process(Seq("cmake", inputFolder.getAbsolutePath), libOutputFolder, env:_*).!
+      val r1 = sys.process.Process(Seq("make"), libOutputFolder, env:_*).!
       if (r0 == 0 && r1 == 0) {
         Right()
       } else {
@@ -66,7 +66,9 @@ object CMakeBuilder {
       val path: String = file.getPath
       val newPath = outputPath +
         File.separator +
-        "headers" +
+        "include" +
+        File.separator +
+        new File(inputPath).getParentFile.getName +
         File.separator +
         path.substring(inputPath.length, path.length)
 

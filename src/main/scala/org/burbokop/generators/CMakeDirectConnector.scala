@@ -11,7 +11,7 @@ import scala.Console.{GREEN, YELLOW}
 import scala.io.AnsiColor.RESET
 import scala.language.{implicitConversions, postfixOps}
 
-object CMakeConnector {
+object CMakeDirectConnector {
   case class Error(message: String) extends Exception(message)
 
   case class Library(name: String, folder: String)
@@ -20,14 +20,14 @@ object CMakeConnector {
 
 
   def libraryFromList(list: List[String]) = if (list.length == 2) {
-    println(s"lib: $list")
     Some(Library(list(1), list(0)))
   } else {
     None
   }
+
   def findLibraries(file: File): List[Library] = {
     FileUtils.recursiveListFiles(file).map { file =>
-      List("\\.a")
+      List(".so", ".a")
         .map(suf => s"(.*)\\/lib([^\\/]+)$suf.*".r.findFirstMatchIn(file.getPath)
           .map(regMatch => libraryFromList(regMatch.subgroups))
         ).find(_.isDefined).getOrElse(None)
@@ -37,18 +37,16 @@ object CMakeConnector {
       .toList
   }
 
-  def generateCMake(virtualSystem: VirtualSystem, projects: List[Project]): String = {
+  def generateCMake(projects: List[Project]): String = {
     val t = (for(p <- projects; lib <- p.libraries) yield lib).unzip
-    val includeDirs = virtualSystem.include
-    println(s"includeDirs: $includeDirs")
+    val includeDirs = projects.map(p => s"${p.path}/headers").mkString("\n\t\t")
     val libs = t._1.mkString("\n\t\t")
-    val libDirs = virtualSystem.lib
-    println(s"libDirs: $libDirs")
-    val a =  if (libs.length > 0) {
+    val libDirs = t._2.mkString("\n\t\t")
+    if (libs.length > 0) {
       s"""
          |function(target_connect_magura TARGET)
          |\ttarget_include_directories($${TARGET} PRIVATE\n\t\t$includeDirs)
-         |\ttarget_link_directories($${TARGET} PUBLIC\n\t\t$libDirs)
+         |\ttarget_link_directories($${TARGET} PRIVATE\n\t\t$libDirs)
          |\ttarget_link_libraries($${TARGET}\n\t\t$libs)
          |endfunction()
          |""".stripMargin
@@ -61,8 +59,6 @@ object CMakeConnector {
     } else {
       ""
     }
-    println(s"cmake: $a")
-    a
   }
 
   def connectMetas(
@@ -71,33 +67,27 @@ object CMakeConnector {
                     virtualSystem: Option[VirtualSystem]
                   ): Either[Throwable, Boolean] = {
     virtualSystem.map { vs =>
-      vs.installLatestVersionRepositories(metas).fold(Left(_), { oks =>
-        if(oks.forall(b => b)) {
-          println(s"${GREEN}connect: $outputPath, cache: $metas$RESET")
-
-          val projects = (for(m <- metas) yield {
-            m.versions.find(_.commit == m.currentCommit).map { version =>
-              Project(findLibraries(new File(version.buildPath)), version.buildPath)
-            }
-          })
-            .filter(_.isDefined)
-            .map(_.get)
-
-          FileUtils.writeIfDifferent(
-            s"$outputPath/magura_build_info.cmake",
-            generateCMake(vs, projects)
-          )
-        } else {
-          Left(new Exception("not all repositories have latest version"))
-        }
-      })
-    } getOrElse {
-      Left(new Exception("error: virtual system not found"))
+      println(s"${YELLOW}vs.installLatestVersionRepositories(cache): ${vs.installLatestVersionRepositories(metas)}$RESET")
     }
+
+    println(s"${GREEN}direct connect: $outputPath, cache: $metas$RESET")
+
+    val projects = (for(m <- metas) yield {
+      m.versions.find(_.commit == m.currentCommit).map { version =>
+        Project(findLibraries(new File(version.buildPath)), version.buildPath)
+      }
+    })
+      .filter(_.isDefined)
+      .map(_.get)
+
+    FileUtils.writeIfDifferent(
+      s"$outputPath/magura_build_info.cmake",
+      generateCMake(projects)
+    )
   }
 }
 
-class CMakeConnector(
+class CMakeDirectConnector(
                       builderDistributor: GeneratorDistributor,
                       cacheFolder: String,
                     ) extends Generator {
