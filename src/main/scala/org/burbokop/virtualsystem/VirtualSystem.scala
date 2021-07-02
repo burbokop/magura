@@ -1,7 +1,8 @@
 package org.burbokop.virtualsystem
 
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
-import org.apache.commons.io.FileUtils
+import org.burbokop.utils.FileUtils
+//import org.apache.commons.io.FileUtils
 import org.burbokop.utils.EitherUtils.ListImplicits.apply
 import org.burbokop.virtualsystem.VirtualSystem.createEnvironment
 
@@ -29,14 +30,10 @@ class VirtualSystem(path: String) {
     "CPATH" -> include,
     "LD_LIBRARY_PATH" -> lib
   )
+  //FileUtils.copyDirectory(new File(metaData.buildPath), new File(path))
 
   def installRepository(metaData: RepositoryVersion): Either[Throwable, Unit] =
-    try {
-      FileUtils.copyDirectory(new File(metaData.buildPath), new File(path))
-      Right()
-    } catch {
-      case e: IOException => Left(e)
-    }
+    FileUtils.recursiveCopyDirectory(metaData.buildPath, path)
 
   def installLatestVersionRepository(repos: RepositoryMetaData): Either[Throwable, Boolean] =
     repos
@@ -49,6 +46,6 @@ class VirtualSystem(path: String) {
       .map(repo => installLatestVersionRepository(repo))
       .partitionEither
       .left
-      .map(_.reduce((a, b) => new Exception(a.getMessage + b.getMessage)))
+      .map(_.reduce((a, b) => new Exception(a.toString + " | " + b.toString)))
   }
 }
