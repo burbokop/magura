@@ -61,6 +61,7 @@ object CMakeBuilder {
     if (!outputFolder.exists()) {
       outputFolder.mkdirs();
     }
+    println(s"copy header: repo name: ${Generator.repositoryName(inputPath)}")
     val inputFolder = new File(inputPath)
     FileUtils.recursiveListFiles(inputFolder).map[Either[Throwable, Unit]] { file =>
       val path: String = file.getPath
@@ -68,7 +69,7 @@ object CMakeBuilder {
         File.separator +
         "include" +
         File.separator +
-        new File(inputPath).getParentFile.getName +
+        Generator.repositoryName(inputPath) +
         File.separator +
         path.substring(inputPath.length, path.length)
 

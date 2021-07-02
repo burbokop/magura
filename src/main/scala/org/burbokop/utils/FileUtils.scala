@@ -42,18 +42,18 @@ object FileUtils {
   def recursiveCopyDirectory(src: String, dest: String): Either[Throwable, Unit] =
     try {
       //src.length, currentFile.getAbsolutePath.length - 1
-      println(s"DEEP COPY $src -> $dest")
+      //println(s"DEEP COPY $src -> $dest")
       recursiveListFiles(new File(src)).map { currentFile =>
         if(currentFile.isFile) {
           val sourcePath = nio.file.Paths.get(currentFile.getAbsolutePath)
           val destinationPath = nio.file.Paths.get(dest).resolve(nio.file.Paths.get(src).relativize(currentFile.toPath))
           try {
-            println(s"\t\tmkdir: ${destinationPath.getParent}")
+            //println(s"\t\tmkdir: ${destinationPath.getParent}")
             nio.file.Files.createDirectories(destinationPath.getParent)
           } catch {
-            case e: IOException => println(s"createDirectory exception: $e")
+            case e: IOException => //println(s"createDirectory exception: $e")
           }
-          println(s"\t$sourcePath -> $destinationPath")
+          //println(s"\t$sourcePath -> $destinationPath")
           try {
             nio.file.Files.copy(
               sourcePath,
