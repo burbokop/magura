@@ -7,7 +7,7 @@ import org.burbokop.utils.FileUtils
 import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
-import scala.Console.{GREEN, YELLOW}
+import scala.Console._
 import scala.io.AnsiColor.RESET
 import scala.language.{implicitConversions, postfixOps}
 
@@ -40,16 +40,15 @@ object CMakeConnector {
   def generateCMake(virtualSystem: VirtualSystem, projects: List[Project]): String = {
     val t = (for(p <- projects; lib <- p.libraries) yield lib).unzip
     val includeDirs = virtualSystem.include
-    println(s"includeDirs: $includeDirs")
-    val libs = t._1.mkString("\n\t\t")
+    val libs = t._1.reverse.mkString("\n    ")
     val libDirs = virtualSystem.lib
-    println(s"libDirs: $libDirs")
-    val a =  if (libs.length > 0) {
+    if (libs.length > 0) {
       s"""
          |function(target_connect_magura TARGET)
-         |\ttarget_include_directories($${TARGET} PRIVATE\n\t\t$includeDirs)
-         |\ttarget_link_directories($${TARGET} PUBLIC\n\t\t$libDirs)
-         |\ttarget_link_libraries($${TARGET}\n\t\t$libs)
+         |  target_include_directories($${TARGET} PRIVATE\n    $includeDirs)
+         |  target_link_directories($${TARGET} PUBLIC\n    $libDirs)
+         |  # Here may be error (undefined ref) depends on order of linked libs. This error appears from ld linker
+         |  target_link_libraries($${TARGET}\n    $libs)
          |endfunction()
          |""".stripMargin
     } else if(includeDirs.length > 0) {
@@ -61,20 +60,15 @@ object CMakeConnector {
     } else {
       ""
     }
-    println(s"cmake: $a")
-    a
   }
 
   def connectMetas(
                     metas: List[RepositoryMetaData],
                     outputPath: String,
-                    virtualSystem: Option[VirtualSystem]
+                    virtualSystem: VirtualSystem
                   ): Either[Throwable, Boolean] = {
-    virtualSystem.map { vs =>
-      vs.installLatestVersionRepositories(metas).fold(Left(_), { oks =>
+    virtualSystem.installLatestVersionRepositories(metas).fold(Left(_), { oks =>
         if(oks.forall(b => b)) {
-          println(s"${GREEN}connect: $outputPath, cache: $metas$RESET")
-
           val projects = (for(m <- metas) yield {
             m.versions.find(_.commit == m.currentCommit).map { version =>
               Project(findLibraries(new File(version.buildPath)), version.buildPath)
@@ -85,30 +79,31 @@ object CMakeConnector {
 
           FileUtils.writeIfDifferent(
             s"$outputPath/magura_build_info.cmake",
-            generateCMake(vs, projects)
+            {
+              val cmake = generateCMake(virtualSystem, projects)
+              println(s"${CYAN}Generated build info:\n$cmake$RESET")
+              cmake
+            }
           )
         } else {
           Left(new Exception("not all repositories have latest version"))
         }
       })
-    } getOrElse {
-      Left(new Exception("error: virtual system not found"))
-    }
   }
 }
 
 class CMakeConnector(
                       builderDistributor: GeneratorDistributor,
                       cacheFolder: String,
+                      virtualSystem: VirtualSystem,
                     ) extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
-                        virtualSystem: Option[VirtualSystem],
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
-    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder, virtualSystem)
+    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
         connectMetas(metas, outputPath, virtualSystem)
       })

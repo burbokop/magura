@@ -1,6 +1,6 @@
 package org.burbokop.generators
 
-import org.burbokop.generators.CMakeConnector.connectMetas
+import org.burbokop.generators.CMakeDirectConnector.connectMetas
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
@@ -27,7 +27,7 @@ object CMakeDirectConnector {
 
   def findLibraries(file: File): List[Library] = {
     FileUtils.recursiveListFiles(file).map { file =>
-      List(".so", ".a")
+      List("\\.a")
         .map(suf => s"(.*)\\/lib([^\\/]+)$suf.*".r.findFirstMatchIn(file.getPath)
           .map(regMatch => libraryFromList(regMatch.subgroups))
         ).find(_.isDefined).getOrElse(None)
@@ -64,14 +64,7 @@ object CMakeDirectConnector {
   def connectMetas(
                     metas: List[RepositoryMetaData],
                     outputPath: String,
-                    virtualSystem: Option[VirtualSystem]
                   ): Either[Throwable, Boolean] = {
-    virtualSystem.map { vs =>
-      println(s"${YELLOW}vs.installLatestVersionRepositories(cache): ${vs.installLatestVersionRepositories(metas)}$RESET")
-    }
-
-    println(s"${GREEN}direct connect: $outputPath, cache: $metas$RESET")
-
     val projects = (for(m <- metas) yield {
       m.versions.find(_.commit == m.currentCommit).map { version =>
         Project(findLibraries(new File(version.buildPath)), version.buildPath)
@@ -88,19 +81,18 @@ object CMakeDirectConnector {
 }
 
 class CMakeDirectConnector(
-                      builderDistributor: GeneratorDistributor,
-                      cacheFolder: String,
-                    ) extends Generator {
+                            builderDistributor: GeneratorDistributor,
+                            cacheFolder: String,
+                          ) extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
-                        virtualSystem: Option[VirtualSystem],
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
-    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder, virtualSystem)
+    MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
-        connectMetas(metas, outputPath, virtualSystem)
+        connectMetas(metas, outputPath)
       })
   }
 }

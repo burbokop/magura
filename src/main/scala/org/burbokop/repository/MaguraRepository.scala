@@ -42,7 +42,6 @@ object MaguraRepository {
            builderDistributor: GeneratorDistributor,
            repository: MaguraRepository,
            cacheFolder: String,
-           virtualSystem: Option[VirtualSystem]
          ): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}$metaFileName"
@@ -57,7 +56,6 @@ object MaguraRepository {
             builderDistributor
               .proceed(
                 RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
-                virtualSystem,
                 entryFolder,
                 buildFolder,
                 repository.builder.map(MaguraFile.fromBuilder(_))
@@ -86,10 +84,9 @@ object MaguraRepository {
            builderDistributor: GeneratorDistributor,
            repos: List[MaguraRepository],
            cacheFolder: String,
-           virtualSystem: Option[VirtualSystem]
          ): Either[Throwable, List[RepositoryMetaData]] =
     (repos
-      .map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder, virtualSystem))
+      .map(repo => MaguraRepository.get(builderDistributor, repo, cacheFolder))
       .partition(_.isLeft) match {
       case (Nil,  ints) => Right(for(Right(i) <- ints) yield i)
       case (strings, _) => Left(for(Left(s) <- strings) yield s)

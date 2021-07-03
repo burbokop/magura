@@ -3,7 +3,7 @@ package org.burbokop.generators
 import org.burbokop.repository.MaguraRepository
 import org.yaml.snakeyaml.Yaml
 
-import java.io.{FileInputStream, InputStream}
+import java.io.{FileInputStream, IOException, InputStream}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala}
 
@@ -50,6 +50,6 @@ object MaguraFile {
   def fromYaml(path: String): Either[Throwable, MaguraFile] = try {
     fromYaml(new FileInputStream(path))
   } catch {
-    case e => Left(MaguraFile.Error(e.getMessage))
+    case e: IOException => Left(MaguraFile.Error(e.getMessage))
   }
 }

@@ -26,15 +26,15 @@ object ConnectTask extends Task {
     val mainVirtualSystem = new VirtualSystem(System.getenv("HOME") + File.separator + ".magura/vsys")
 
     val builderDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeBuilder(),
-      "configure" -> new ConfigureBuilder()
+      "cmake" -> new CMakeBuilder(mainVirtualSystem),
+      "configure" -> new ConfigureBuilder(mainVirtualSystem)
     ), _.builder)
 
     val connectorDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder)
+      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem)
     ), _.connector)
 
-    connectorDistributor.proceed(List(), Some(mainVirtualSystem), input, output, None).fold({ error =>
+    connectorDistributor.proceed(List(), input, output, None).fold({ error =>
       println(s"magura connection error: ${error.getMessage}")
     }, { generatorName =>
       generatorName.map { generatorName =>

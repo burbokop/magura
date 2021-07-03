@@ -15,7 +15,6 @@ object Generator {
 abstract class Generator {
   def proceed(
                cache: List[RepositoryMetaData],
-               virtualSystem: Option[VirtualSystem],
                inputPath: String,
                outputPath: String,
                maguraFile: MaguraFile
