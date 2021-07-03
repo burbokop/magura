@@ -1,11 +1,9 @@
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageMapping
 import com.typesafe.sbt.packager.linux.LinuxSymlink
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
-import sttp.client3.{HttpURLConnectionBackend, UriContext, asString, basicRequest}
 
 name := "magura"
 
-version := "0.1.2"
+version := "0.1.3"
 
 maintainer := "Borys Boiko <burbokop@gmail.com>"
 packageSummary := "Package for downloading dependencies from github"

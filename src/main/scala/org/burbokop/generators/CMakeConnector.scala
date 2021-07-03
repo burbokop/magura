@@ -20,7 +20,6 @@ object CMakeConnector {
 
 
   def libraryFromList(list: List[String]) = if (list.length == 2) {
-    println(s"lib: $list")
     Some(Library(list(1), list(0)))
   } else {
     None
@@ -81,7 +80,7 @@ object CMakeConnector {
             s"$outputPath/magura_build_info.cmake",
             {
               val cmake = generateCMake(virtualSystem, projects)
-              println(s"${CYAN}Generated build info:\n$cmake$RESET")
+              println(s"${MAGENTA}Generated build info:\n$cmake$RESET")
               cmake
             }
           )
