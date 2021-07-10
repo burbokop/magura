@@ -5,7 +5,7 @@ import org.burbokop.routes.git.GithubRoutes
 
 import java.io.{File, FileOutputStream}
 
-object GenerateReleaseInfo extends Task {
+object GenerateReleaseInfoTask extends Task {
   override def exec(args: Array[String]): Unit = {
     if (args.length > 0) {
       val buildInfo = maguraApp.BuildInfo

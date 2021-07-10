@@ -2,6 +2,8 @@ package org.burbokop.virtualsystem
 
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.utils.FileUtils
+
+import scala.reflect.io.Directory
 //import org.apache.commons.io.FileUtils
 import org.burbokop.utils.EitherUtils.ListImplicits.apply
 import org.burbokop.virtualsystem.VirtualSystem.createEnvironment
@@ -47,5 +49,10 @@ class VirtualSystem(path: String) {
       .partitionEither
       .left
       .map(_.reduce((a, b) => new Exception(a.toString + " | " + b.toString)))
+  }
+
+  def clear(): Boolean = {
+    val directory = new Directory(new File(path))
+    directory.deleteRecursively()
   }
 }

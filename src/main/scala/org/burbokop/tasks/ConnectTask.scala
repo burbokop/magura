@@ -35,7 +35,7 @@ object ConnectTask extends Task {
     ), _.connector)
 
     connectorDistributor.proceed(List(), input, output, None).fold({ error =>
-      println(s"magura connection error: ${error.getMessage}")
+      System.err.println(s"magura connection error: $error")
     }, { generatorName =>
       generatorName.map { generatorName =>
         println(s"magura connected with generator '$generatorName'")
