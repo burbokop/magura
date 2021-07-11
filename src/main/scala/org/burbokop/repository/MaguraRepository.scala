@@ -46,7 +46,7 @@ object MaguraRepository {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}$metaFileName"
     GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(Left(_), { branch =>
-      val meta = RepositoryMetaData.fromJsonDefault(metaFile)
+      val meta = RepositoryMetaData.fromJsonFileDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
         val e = GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
           .body.fold(e => Left(MaguraRepository.Error(e)), { data =>

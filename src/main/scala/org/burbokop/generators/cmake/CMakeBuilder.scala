@@ -1,13 +1,11 @@
-package org.burbokop.generators
+package org.burbokop.generators.cmake
 
-import org.burbokop.generators.ConfigureBuilder.{Paths, createEnvironment}
+import org.burbokop.generators.{Generator, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
 import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
-import scala.Console.{GREEN, YELLOW}
-import scala.io.AnsiColor.{MAGENTA, RESET}
 
 object CMakeBuilder {
   case class Error(message: String) extends Exception(message)

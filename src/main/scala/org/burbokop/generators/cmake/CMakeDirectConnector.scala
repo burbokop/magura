@@ -1,14 +1,12 @@
-package org.burbokop.generators
+package org.burbokop.generators.cmake
 
-import org.burbokop.generators.CMakeDirectConnector.connectMetas
+import org.burbokop.generators.cmake.CMakeDirectConnector.connectMetas
+import org.burbokop.generators.{Generator, GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
-import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
-import scala.Console.{GREEN, YELLOW}
-import scala.io.AnsiColor.RESET
 import scala.language.{implicitConversions, postfixOps}
 
 object CMakeDirectConnector {

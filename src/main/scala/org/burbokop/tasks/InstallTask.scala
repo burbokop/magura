@@ -1,7 +1,8 @@
 package org.burbokop.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.generators.{CMakeBuilder, GeneratorDistributor}
+import org.burbokop.generators.GeneratorDistributor
+import org.burbokop.generators.cmake.CMakeBuilder
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.virtualsystem.VirtualSystem
 

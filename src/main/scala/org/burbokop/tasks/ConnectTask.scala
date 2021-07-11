@@ -1,7 +1,9 @@
 package org.burbokop.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.generators.{CMakeBuilder, CMakeConnector, ConfigureBuilder, GeneratorDistributor}
+import org.burbokop.generators.cmake.{CMakeBuilder, CMakeConnector}
+import org.burbokop.generators.GeneratorDistributor
+import org.burbokop.generators.configure.ConfigureBuilder
 import org.burbokop.utils.ErrorUtils.ThrowableImplicits.apply
 import org.burbokop.utils.FileUtils
 import org.burbokop.virtualsystem.VirtualSystem
@@ -21,7 +23,8 @@ object ConnectTask extends Task {
                              |""".stripMargin.toArgs.process(args)
 
 
-    val input = FileUtils.normalizeFolder(parsedArgs.get[String]("project").get)
+    val projectFile = parsedArgs.get[String]("project").get
+    val input = FileUtils.normalizeFolder(projectFile)
     val output = FileUtils.normalizeFolder(parsedArgs.get[String]("output").get)
 
     println(s"${GREEN}project folder: $input$RESET")
@@ -36,7 +39,7 @@ object ConnectTask extends Task {
     ), _.builder)
 
     val connectorDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem)
+      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem, projectFile)
     ), _.connector)
 
     connectorDistributor.proceed(List(), input, output, None).fold({ error =>

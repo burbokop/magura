@@ -1,11 +1,13 @@
-package org.burbokop.generators
+package org.burbokop.generators.cmake
 
-import org.burbokop.generators.CMakeConnector.connectMetas
+import org.burbokop.generators.cmake.CMakeConnector.connectMetas
+import org.burbokop.generators.{Generator, GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
 import org.burbokop.utils.HashUtils.StringImplicits.apply
 import org.burbokop.virtualsystem.VirtualSystem
+import play.api.libs.json.Json
 
 import java.io.File
 import scala.Console._
@@ -37,14 +39,14 @@ object CMakeConnector {
       .toList
   }
 
-  def generateCMake(virtualSystem: VirtualSystem, projects: List[Project]): String = {
+  def generateCMake(md5: String, virtualSystem: VirtualSystem, projects: List[Project]): String = {
     val t = (for(p <- projects; lib <- p.libraries) yield lib).unzip
     val includeDirs = virtualSystem.include
     val libs = t._1.reverse.mkString("\n    ")
     val libDirs = virtualSystem.lib
     if (libs.length > 0) {
       s"""
-         |function(target_connect_magura TARGET)
+         |function(target_connect_magura_$md5 TARGET)
          |  target_include_directories($${TARGET} PRIVATE\n    $includeDirs)
          |  target_link_directories($${TARGET} PUBLIC\n    $libDirs)
          |  # Here may be error (undefined ref) depends on order of linked libs. This error appears from ld linker
@@ -66,30 +68,52 @@ object CMakeConnector {
                     metas: List[RepositoryMetaData],
                     inputPath: String,
                     outputPath: String,
-                    virtualSystem: VirtualSystem
+                    virtualSystem: VirtualSystem,
+                    projectFile: String
                   ): Either[Throwable, Boolean] = {
     virtualSystem.installLatestVersionRepositories(metas).fold(Left(_), { oks =>
-        if(oks.forall(b => b)) {
-          val projects = (for(m <- metas) yield {
-            m.versions.find(_.commit == m.currentCommit).map { version =>
-              Project(findLibraries(new File(version.buildPath)), version.buildPath)
-            }
-          })
-            .filter(_.isDefined)
-            .map(_.get)
+      if(oks.forall(b => b)) {
+        val projects = (for(m <- metas) yield {
+          m.versions.find(_.commit == m.currentCommit).map { version =>
+            Project(findLibraries(new File(version.buildPath)), version.buildPath)
+          }
+        })
+          .filter(_.isDefined)
+          .map(_.get)
 
-          FileUtils.writeIfDifferent(
-            s"$outputPath/magura_build_info.d/${inputPath.md5}.cmake",
-            {
-              val cmake = generateCMake(virtualSystem, projects)
-              println(s"${MAGENTA}Generated build info:\n$cmake$RESET")
-              cmake
-            }
-          )
-        } else {
-          Left(new Exception("not all repositories have latest version"))
-        }
-      })
+        val projectFileMd5 = projectFile.md5
+
+        TargetMetaData.insert(s"$outputPath/magura_build_info.d/target_meta.json", projectFile, true)
+          .fold(Left(_), { targetMetaData =>
+
+            val aaa = "function(target_connect_magura TARGET)\n" +
+              (for(p <- targetMetaData.paths) yield {
+                s"""
+                   |${if(targetMetaData.paths.head == p) "  if" else "  elseif"}($${CMAKE_PARENT_LIST_FILE} EQUAL $p)
+                   |    target_connect_magura_${p.md5}($${TARGET})
+                   |""".stripMargin
+              }).reduce(_ + _) + "\n  endif()\nendfunction()\n"
+
+            println(s"${MAGENTA}masterFile:\n$aaa$RESET")
+
+            FileUtils.writeIfDifferent(
+              s"$outputPath/magura_build_info.d/master.cmake",
+              aaa
+            ).fold(Left(_), { _ =>
+              FileUtils.writeIfDifferent(
+                s"$outputPath/magura_build_info.d/$projectFileMd5.cmake",
+                {
+                  val cmake = generateCMake(projectFileMd5, virtualSystem, projects)
+                  println(s"${MAGENTA}Generated build info:\n$cmake$RESET")
+                  cmake
+                }
+              )
+            })
+          })
+      } else {
+        Left(new Exception("not all repositories have latest version"))
+      }
+    })
   }
 }
 
@@ -97,6 +121,7 @@ class CMakeConnector(
                       builderDistributor: GeneratorDistributor,
                       cacheFolder: String,
                       virtualSystem: VirtualSystem,
+                      projectFile: String
                     ) extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
@@ -106,6 +131,6 @@ class CMakeConnector(
                       ): Either[Throwable, Boolean] =
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
-        connectMetas(metas, inputPath, outputPath, virtualSystem)
+        connectMetas(metas, inputPath, outputPath, virtualSystem, projectFile)
       })
 }

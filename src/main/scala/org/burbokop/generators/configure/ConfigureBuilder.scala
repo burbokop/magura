@@ -1,4 +1,7 @@
-package org.burbokop.generators
+package org.burbokop.generators.configure
+
+import org.burbokop.generators.cmake.CMakeBuilder
+import org.burbokop.generators.{Generator, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.virtualsystem.VirtualSystem
 
