@@ -1,10 +1,10 @@
 package org.burbokop
 
 import org.burbokop.tasks.{CacheInfoTask, ClearCacheTask, ConnectTask, GenerateReleaseInfoTask, InitTask, InstallTask}
-
-
+import org.burbokop.utils.HashUtils.StringImplicits.apply
 
 object Main extends App {
+  println("gogadoda".md5)
   val help =
     """
       |Usage: magura [command]

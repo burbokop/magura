@@ -24,6 +24,9 @@ object ConnectTask extends Task {
     val input = FileUtils.normalizeFolder(parsedArgs.get[String]("project").get)
     val output = FileUtils.normalizeFolder(parsedArgs.get[String]("output").get)
 
+    println(s"${GREEN}project folder: $input$RESET")
+    println(s"${GREEN}output folder: $output$RESET")
+
     val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
     val mainVirtualSystem = new VirtualSystem(System.getenv("HOME") + File.separator + ".magura/vsys")
 

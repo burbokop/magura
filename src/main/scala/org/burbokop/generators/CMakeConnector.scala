@@ -4,6 +4,7 @@ import org.burbokop.generators.CMakeConnector.connectMetas
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.repository.MaguraRepository
 import org.burbokop.utils.FileUtils
+import org.burbokop.utils.HashUtils.StringImplicits.apply
 import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -63,6 +64,7 @@ object CMakeConnector {
 
   def connectMetas(
                     metas: List[RepositoryMetaData],
+                    inputPath: String,
                     outputPath: String,
                     virtualSystem: VirtualSystem
                   ): Either[Throwable, Boolean] = {
@@ -77,7 +79,7 @@ object CMakeConnector {
             .map(_.get)
 
           FileUtils.writeIfDifferent(
-            s"$outputPath/magura_build_info.cmake",
+            s"$outputPath/magura_build_info.d/${inputPath.md5}.cmake",
             {
               val cmake = generateCMake(virtualSystem, projects)
               println(s"${MAGENTA}Generated build info:\n$cmake$RESET")
@@ -104,6 +106,6 @@ class CMakeConnector(
                       ): Either[Throwable, Boolean] =
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
-        connectMetas(metas, outputPath, virtualSystem)
+        connectMetas(metas, inputPath, outputPath, virtualSystem)
       })
 }

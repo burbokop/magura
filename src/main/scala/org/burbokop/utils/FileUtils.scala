@@ -73,6 +73,7 @@ object FileUtils {
       } catch {
         case _: FileNotFoundException => true
       }) {
+        new File(path).getParentFile.mkdirs()
         new FileOutputStream(path).write(data.toArray.map(_.toByte))
         Right(true)
       } else {
