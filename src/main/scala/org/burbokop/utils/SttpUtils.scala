@@ -1,24 +1,25 @@
 package org.burbokop.utils
 
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
-import sttp.client3.asString
+import sttp.client3.{UriContext, asString}
+import sttp.model.Uri
 
 object SttpUtils {
   final case class HttpStatusException(statusCode: Int, message: String) extends Exception(message)
 
   final case class EmptyBodyException(message: String) extends Exception(message)
 
-  final case class UnsuccessfulResponseException(message: String) extends Exception(message)
+  final case class UnsuccessfulResponseException(uri: Uri, message: String) extends Exception(s"url: $uri, massage: $message")
 
   final case class JsonParseException(message: String, jsError: JsError, body: String) extends Exception(message)
 
-  def deserializeEither[A](data: Either[String, String])(implicit jsonReads: Reads[A]): Either[String, A] =
-    deserializeEitherThrowable(data).left.map(_.getMessage)
+  def deserializeEither[A](uri: Uri, data: Either[String, String])(implicit jsonReads: Reads[A]): Either[String, A] =
+    deserializeEitherThrowable(uri, data).left.map(_.getMessage)
 
-  def deserializeEitherThrowable[A](data: Either[String, String])(implicit jsonReads: Reads[A]): Either[Throwable, A] =
+  def deserializeEitherThrowable[A](uri: Uri, data: Either[String, String])(implicit jsonReads: Reads[A]): Either[Throwable, A] =
     data.fold(
       error =>
-        Left(UnsuccessfulResponseException(error)),
+        Left(UnsuccessfulResponseException(uri, error)),
       data =>
         if(data.isEmpty) {
           Left(EmptyBodyException("data is empty"))
@@ -30,7 +31,9 @@ object SttpUtils {
         }
     )
 
-  def asThrowable[A](implicit jsonReads: Reads[A]) = asString.map(deserializeEitherThrowable[A])
+  def asThrowable[A](uri: Uri = uri"")(implicit jsonReads: Reads[A]) =
+    asString.map(data => deserializeEitherThrowable[A](uri, data))
 
-  def as[A](implicit jsonReads: Reads[A]) = asString.map(deserializeEither[A])
+  def as[A](uri: Uri = uri"")(implicit jsonReads: Reads[A]) =
+    asString.map(data => deserializeEither[A](uri, data))
 }

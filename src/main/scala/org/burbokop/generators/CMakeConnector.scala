@@ -101,10 +101,9 @@ class CMakeConnector(
                         inputPath: String,
                         outputPath: String,
                         maguraFile: MaguraFile
-                      ): Either[Throwable, Boolean] = {
+                      ): Either[Throwable, Boolean] =
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       .fold(Left(_), { metas =>
         connectMetas(metas, outputPath, virtualSystem)
       })
-  }
 }

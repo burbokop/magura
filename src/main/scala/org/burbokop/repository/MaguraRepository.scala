@@ -3,7 +3,7 @@ package org.burbokop.repository
 import org.burbokop.generators.{GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.routes.git.GithubRoutes
-import org.burbokop.utils.ZipUtils
+import org.burbokop.utils.{ReducedError, ZipUtils}
 import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.{ByteArrayInputStream, File}
@@ -45,10 +45,10 @@ object MaguraRepository {
          ): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}$metaFileName"
-    GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(e => Left(new RuntimeException(e)), { branch =>
+    GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(Left(_), { branch =>
       val meta = RepositoryMetaData.fromJsonDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
-        GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
+        val e = GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
           .body.fold(e => Left(MaguraRepository.Error(e)), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
             val entryFolder = s"$repoFolder${File.separator}$repoEntry"
@@ -74,6 +74,8 @@ object MaguraRepository {
               })
           })
         })
+        println(s"ee: $e")
+        e
       } else {
         Right(meta)
       }
@@ -92,5 +94,5 @@ object MaguraRepository {
       case (strings, _) => Left(for(Left(s) <- strings) yield s)
     })
       .left
-      .map(e => e.reduce((a: Throwable, b: Throwable) => MaguraRepository.Error(a.getMessage + ", " + b.getMessage)))
+      .map(e => ReducedError(e))
 }

@@ -2,10 +2,12 @@ package org.burbokop.tasks
 
 import com.concurrentthought.cla._
 import org.burbokop.generators.{CMakeBuilder, CMakeConnector, ConfigureBuilder, GeneratorDistributor}
+import org.burbokop.utils.ErrorUtils.ThrowableImplicits.apply
 import org.burbokop.utils.FileUtils
 import org.burbokop.virtualsystem.VirtualSystem
 
 import java.io.File
+import scala.Console._
 
 object ConnectTask extends Task {
   override def exec(args: Array[String]): Unit = {
@@ -35,7 +37,7 @@ object ConnectTask extends Task {
     ), _.connector)
 
     connectorDistributor.proceed(List(), input, output, None).fold({ error =>
-      System.err.println(s"magura connection error: $error")
+      error.print(true)
     }, { generatorName =>
       generatorName.map { generatorName =>
         println(s"magura connected with generator '$generatorName'")

@@ -14,10 +14,11 @@ object GithubRoutes {
   }
 
   def getBranch(user: String, repo: String, branch: String) = {
+    val uri = uri"https://api.github.com/repos/$user/$repo/branches/$branch"
     basicRequest
       .header("Accept", "application/vnd.github.v3+json")
-      .get(uri"https://api.github.com/repos/$user/$repo/branches/$branch")
-      .response(SttpUtils.as[GithubBranch])
+      .get(uri)
+      .response(SttpUtils.asThrowable[GithubBranch](uri))
       .send(HttpURLConnectionBackend())
   }
 
@@ -38,10 +39,11 @@ object GithubRoutes {
   }
 
   def getRepositoryReleases(user: String, repo: String) = {
+    val uri = uri"https://api.github.com/repos/$user/$repo/releases"
     basicRequest
       .header("Accept", "application/vnd.github.v3+json")
-      .get(uri"https://api.github.com/repos/$user/$repo/releases")
-      .response(SttpUtils.as[List[GithubRelease]])
+      .get(uri)
+      .response(SttpUtils.asThrowable[List[GithubRelease]](uri))
       .send(HttpURLConnectionBackend())
   }
 }
