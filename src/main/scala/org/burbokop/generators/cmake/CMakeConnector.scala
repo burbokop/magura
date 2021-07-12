@@ -47,6 +47,7 @@ object CMakeConnector {
     if (libs.length > 0) {
       s"""
          |function(target_connect_magura_$md5 TARGET)
+         |  message("connection $md5 on target $${TARGET}")
          |  target_include_directories($${TARGET} PRIVATE\n    $includeDirs)
          |  target_link_directories($${TARGET} PUBLIC\n    $libDirs)
          |  # Here may be error (undefined ref) depends on order of linked libs. This error appears from ld linker
@@ -63,6 +64,25 @@ object CMakeConnector {
       ""
     }
   }
+
+  def generateMasterCMake(targetMetaData: TargetMetaData): String =
+    (for(p <- targetMetaData.paths) yield {
+      s"""include($${CMAKE_CURRENT_LIST_DIR}/${p.md5}.cmake)
+         |""".stripMargin
+    }).reduce(_ + _) +
+      s"""
+         |function(target_connect_magura TARGET)
+         |""".stripMargin +
+      (for(p <- targetMetaData.paths) yield {
+        s"""${if(targetMetaData.paths.head == p) "  if" else "  elseif"}("$${CMAKE_PARENT_LIST_FILE}" STREQUAL "$p")
+           |    target_connect_magura_${p.md5}($${TARGET})
+           |""".stripMargin
+      }).reduce(_ + _) +
+      """  else()
+        |    message(FATAL_ERROR "error: undefined parent cmake")
+        |  endif()
+        |endfunction()
+        |""".stripMargin
 
   def connectMetas(
                     metas: List[RepositoryMetaData],
@@ -85,20 +105,11 @@ object CMakeConnector {
 
         TargetMetaData.insert(s"$outputPath/magura_build_info.d/target_meta.json", projectFile, true)
           .fold(Left(_), { targetMetaData =>
-
-            val aaa = "function(target_connect_magura TARGET)\n" +
-              (for(p <- targetMetaData.paths) yield {
-                s"""
-                   |${if(targetMetaData.paths.head == p) "  if" else "  elseif"}($${CMAKE_PARENT_LIST_FILE} EQUAL $p)
-                   |    target_connect_magura_${p.md5}($${TARGET})
-                   |""".stripMargin
-              }).reduce(_ + _) + "\n  endif()\nendfunction()\n"
-
-            println(s"${MAGENTA}masterFile:\n$aaa$RESET")
-
+            val masterCMake = generateMasterCMake(targetMetaData)
+            println(s"${CYAN}Master cmake:\n$masterCMake$RESET")
             FileUtils.writeIfDifferent(
               s"$outputPath/magura_build_info.d/master.cmake",
-              aaa
+              masterCMake
             ).fold(Left(_), { _ =>
               FileUtils.writeIfDifferent(
                 s"$outputPath/magura_build_info.d/$projectFileMd5.cmake",
