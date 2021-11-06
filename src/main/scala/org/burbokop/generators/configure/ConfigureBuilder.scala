@@ -1,5 +1,6 @@
 package org.burbokop.generators.configure
 
+import org.burbokop.generators.Generator.Options
 import org.burbokop.generators.cmake.CMakeBuilder
 import org.burbokop.generators.{Generator, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
@@ -15,14 +16,16 @@ object ConfigureBuilder {
         .map(_.latestVersion)
         .filter(_.isDefined)
         .map(_.get).map { version =>
-        if (version.builder == "configure") {
-          Some(Paths(
-            new File(s"${version.buildPath}${File.separator}bin").getAbsolutePath,
-            new File(s"${version.buildPath}${File.separator}include").getAbsolutePath,
-            new File(s"${version.buildPath}${File.separator}lib").getAbsolutePath
-          ))
-        } else {
-          None
+        version.defaultBuildPath().map { buildPath =>
+          if (version.builder == "configure") {
+            Some(Paths(
+              new File(s"$buildPath${File.separator}bin").getAbsolutePath,
+              new File(s"$buildPath${File.separator}include").getAbsolutePath,
+              new File(s"$buildPath${File.separator}lib").getAbsolutePath
+            ))
+          } else {
+            None
+          }
         }
       }
         .filter(_.isDefined)
@@ -78,6 +81,7 @@ class ConfigureBuilder(virtualSystem: VirtualSystem) extends Generator {
                         cache: List[RepositoryMetaData],
                         inputPath: String,
                         outputPath: String,
+                        options: Options,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
     ConfigureBuilder.build(cache, virtualSystem, inputPath, outputPath).map(_ => true)

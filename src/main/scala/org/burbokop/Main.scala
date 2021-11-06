@@ -3,6 +3,12 @@ package org.burbokop
 import org.burbokop.tasks._
 
 object Main extends App {
+  val reflections = new Reflections(new ConfigurationBuilder()
+    .filterInputsBy(new FilterBuilder().includePackage("my.project.prefix"))
+    .setUrls(ClasspathHelper.forPackage("my.project.prefix"))
+    .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner().filterResultsBy(optionalFilter), ...));
+
+
   val help =
     """
       |Usage: magura [command]

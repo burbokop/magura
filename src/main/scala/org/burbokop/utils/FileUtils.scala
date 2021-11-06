@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object FileUtils {
+  implicit def / = File.separator
 
   def pwd(): String = new java.io.File(".").getCanonicalPath
 

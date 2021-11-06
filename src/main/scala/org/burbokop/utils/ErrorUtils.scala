@@ -3,6 +3,11 @@ package org.burbokop.utils
 import scala.Console.{CYAN, RED, RESET, YELLOW, println}
 
 object ErrorUtils {
+  def reduce(throwable0: Throwable, throwable1: Throwable) = {
+    throwable0.addSuppressed(throwable1)
+    throwable0
+  }
+
   class ThrowableImplicits(throwable: Throwable) {
     def print(verbose: Boolean): Unit = {
       System.err.println(s"${RED}magura connection error: $throwable$RESET")

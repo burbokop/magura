@@ -11,7 +11,17 @@ object EitherUtils {
     def filterLefts: List[A] = list.filter(_.isLeft).map(_.left.toOption.get)
     def filterRights: List[B] = list.filter(_.isRight).map(_.toOption.get)
   }
+
   object ListImplicits {
     implicit def apply[A, B](list: List[Either[A, B]]) = new ListImplicits[A, B](list)
+  }
+
+  class ThrowableListImplicits[B](list: List[Either[Throwable, B]]) {
+    def reducesPartitionEither: Either[ReducedError, List[B]] =
+      ListImplicits(list).partitionEither.left.map(ReducedError(_))
+  }
+
+  object ThrowableListImplicits {
+    implicit def apply[B](list: List[Either[Throwable, B]]) = new ThrowableListImplicits[B](list)
   }
 }

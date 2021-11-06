@@ -1,11 +1,11 @@
 package org.burbokop.repository
 
-import org.burbokop.generators.Generator.Options
+import org.burbokop.generators.Generator.{DefaultOptions, Options}
 import org.burbokop.generators.{GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.routes.git.GithubRoutes
 import org.burbokop.utils.{ReducedError, ZipUtils}
-import org.burbokop.virtualsystem.VirtualSystem
+import org.burbokop.utils.FileUtils./
 
 import java.io.{ByteArrayInputStream, File}
 
@@ -43,31 +43,37 @@ object MaguraRepository {
            builderDistributor: GeneratorDistributor,
            repository: MaguraRepository,
            cacheFolder: String,
-           optionsList: List[Options] = Options.defaultList
+           optionsSet: Set[Options] = Set(new DefaultOptions())
          ): Either[Throwable, RepositoryMetaData] = {
-    val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
-    val metaFile = s"$repoFolder${File.separator}$metaFileName"
+    val repoFolder = s"$cacheFolder${/}${repository.user}${/}${repository.name}"
+    val metaFile = s"$repoFolder${/}$metaFileName"
     GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(Left(_), { branch =>
       val meta = RepositoryMetaData.fromJsonFileDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
-        val e = GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
+        GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
           .body.fold(e => Left(MaguraRepository.Error(e)), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
-            val entryFolder = s"$repoFolder${File.separator}$repoEntry"
-            val buildFolder = s"$repoFolder${File.separator}build_$repoEntry"
+            val entryFolder = s"$repoFolder${/}$repoEntry"
+            val buildPaths: Map[String, Options] =
+              optionsSet.map(options => (s"$repoFolder${/}build_${options.hashName()}_$repoEntry", options)).toMap
+
+            println(s"optionsSet: $optionsSet")
+            println(s"entryFolder: $entryFolder")
+            println(s"buildPaths: $buildPaths")
+
             builderDistributor
               .proceed(
                 RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
                 entryFolder,
-                buildFolder,
+                buildPaths,
                 repository.builder.map(MaguraFile.fromBuilder(_))
               )
-              .fold(Left(_), { generatorName =>
+              .fold[Either[Throwable, RepositoryMetaData]](Left(_), generatorName => {
                 generatorName.map { generatorName =>
                   meta.withVersion(RepositoryVersion(
                     branch.commit.sha,
                     entryFolder,
-                    buildFolder,
+                    buildPaths,
                     generatorName
                   )).writeJsonToFile(metaFile, true)
                 } getOrElse {
@@ -76,8 +82,6 @@ object MaguraRepository {
               })
           })
         })
-        println(s"ee: $e")
-        e
       } else {
         Right(meta)
       }

@@ -35,7 +35,9 @@ class VirtualSystem(path: String) {
   //FileUtils.copyDirectory(new File(metaData.buildPath), new File(path))
 
   def installRepository(metaData: RepositoryVersion): Either[Throwable, Unit] =
-    FileUtils.recursiveCopyDirectory(metaData.buildPath, path)
+    metaData.defaultBuildPath()
+      .map(bp => FileUtils.recursiveCopyDirectory(bp, path))
+      .getOrElse(Left(new Exception("RepositoryVersion do not have any build")))
 
   def installLatestVersionRepository(repos: RepositoryMetaData): Either[Throwable, Boolean] =
     repos

@@ -1,6 +1,7 @@
 package org.burbokop.tasks
 
 import com.concurrentthought.cla._
+import org.burbokop.generators.Generator.DefaultOptions
 import org.burbokop.generators.cmake.{CMakeBuilder, CMakeConnector}
 import org.burbokop.generators.GeneratorDistributor
 import org.burbokop.generators.configure.ConfigureBuilder
@@ -42,7 +43,7 @@ object ConnectTask extends Task {
       "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem, projectFile)
     ), _.connector)
 
-    connectorDistributor.proceed(List(), input, output, None).fold({ error =>
+    connectorDistributor.proceed(List(), input, Map(output -> DefaultOptions()), None).fold({ error =>
       error.print(true)
     }, { generatorName =>
       generatorName.map { generatorName =>

@@ -1,5 +1,6 @@
 package org.burbokop.generators.cmake
 
+import org.burbokop.generators.Generator.Options
 import org.burbokop.generators.cmake.CMakeDirectConnector.connectMetas
 import org.burbokop.generators.{Generator, GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
@@ -64,8 +65,10 @@ object CMakeDirectConnector {
                     outputPath: String,
                   ): Either[Throwable, Boolean] = {
     val projects = (for(m <- metas) yield {
-      m.versions.find(_.commit == m.currentCommit).map { version =>
-        Project(findLibraries(new File(version.buildPath)), version.buildPath)
+      m.latestVersion().flatMap { version =>
+        version.defaultBuildPath().map { buildPath =>
+          Project(findLibraries(new File(buildPath)), buildPath)
+        }
       }
     })
       .filter(_.isDefined)
@@ -86,6 +89,7 @@ class CMakeDirectConnector(
                         cache: List[RepositoryMetaData],
                         inputPath: String,
                         outputPath: String,
+                        options: Options,
                         maguraFile: MaguraFile
                       ): Either[Throwable, Boolean] = {
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
