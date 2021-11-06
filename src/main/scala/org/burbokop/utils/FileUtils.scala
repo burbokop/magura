@@ -6,6 +6,9 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object FileUtils {
+
+  def pwd(): String = new java.io.File(".").getCanonicalPath
+
   @tailrec
   def normalizeFolder(folder: File): File =
     if (folder.isDirectory) folder

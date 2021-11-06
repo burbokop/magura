@@ -1,6 +1,7 @@
 package org.burbokop.generators
 
 import org.burbokop.repository.MaguraRepository
+import org.burbokop.utils.YamlReadable
 import org.yaml.snakeyaml.Yaml
 
 import java.io.{FileInputStream, IOException, InputStream}
@@ -15,12 +16,12 @@ case class MaguraFile(
 
 
 
-object MaguraFile {
+object MaguraFile extends YamlReadable[MaguraFile] {
   case class Error(message: String) extends Exception(message)
 
   def fromBuilder(builder: String) = MaguraFile(builder, "", List())
 
-  def fromMap(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
+  override def fromMap(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
     val builder = map.get("builder").map(_.toString)
     val connector = map.get("connector").map(_.toString)
     val dependencies = map.get("dependencies").map(
@@ -42,14 +43,5 @@ object MaguraFile {
         ))
       })
     }
-  }
-
-  def fromYaml(inputStream: InputStream): Either[Throwable, MaguraFile] =
-    fromMap(new Yaml().load(inputStream).asInstanceOf[java.util.Map[String, Any]].asScala)
-
-  def fromYaml(path: String): Either[Throwable, MaguraFile] = try {
-    fromYaml(new FileInputStream(path))
-  } catch {
-    case e: IOException => Left(MaguraFile.Error(e.getMessage))
   }
 }

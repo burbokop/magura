@@ -1,7 +1,6 @@
 package org.burbokop
 
-import org.burbokop.tasks.{CacheInfoTask, ClearCacheTask, ConnectTask, GenerateReleaseInfoTask, InitTask, InstallTask}
-import org.burbokop.utils.HashUtils.StringImplicits.apply
+import org.burbokop.tasks._
 
 object Main extends App {
   val help =
@@ -11,6 +10,7 @@ object Main extends App {
       |  install  --  Installs package to cache
       |  connect  --  Connect project dependencies
       |  init     --  Init a project with magura.yaml
+      |  build    --  Builds repo with multiple prefixes
       |  prune    --  Clear magura cache
       |  info     --  Display cache info
       |""".stripMargin
@@ -23,6 +23,7 @@ object Main extends App {
       case "prune" => ClearCacheTask.exec(args.tail)
       case "info" => CacheInfoTask.exec(args.tail)
       case "version" => println(s"${maguraApp.BuildInfo.name} ${maguraApp.BuildInfo.version}")
+      case "build" => BuildTask.exec(args.tail)
       case _ => println(help)
     }
   } else {

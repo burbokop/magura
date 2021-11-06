@@ -1,5 +1,6 @@
 package org.burbokop.repository
 
+import org.burbokop.generators.Generator.Options
 import org.burbokop.generators.{GeneratorDistributor, MaguraFile}
 import org.burbokop.models.meta.{RepositoryMetaData, RepositoryVersion}
 import org.burbokop.routes.git.GithubRoutes
@@ -42,6 +43,7 @@ object MaguraRepository {
            builderDistributor: GeneratorDistributor,
            repository: MaguraRepository,
            cacheFolder: String,
+           optionsList: List[Options] = Options.defaultList
          ): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${File.separator}${repository.user}${File.separator}${repository.name}"
     val metaFile = s"$repoFolder${File.separator}$metaFileName"
