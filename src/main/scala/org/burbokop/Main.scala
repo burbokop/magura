@@ -3,6 +3,7 @@ package org.burbokop
 import org.burbokop.generators.Generator.Options
 import org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions
 import org.burbokop.tasks._
+import org.burbokop.utils.java.OptionsType
 import play.api.libs.json.JsValue
 
 import scala.reflect.runtime.{universe => ru}
@@ -15,6 +16,25 @@ object Main extends App {
   //  .setUrls(ClasspathHelper.forPackage("my.project.prefix"))
   //  .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner().filterResultsBy(optionalFilter), ...));
 
+  //ru.Type
+
+
+  //typeOf[CMakeOptions].typeSymbol.name
+
+  //TermName("").
+
+  val a = OptionsType.annotations("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions")
+
+  println(s"AAA: $a")
+
+  val mmm = OptionsType.findAnnotationMethod("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", typeOf[Options], typeOf[JsValue])
+
+  println(s"mmm: $mmm")
+  val mmm2 = OptionsType.findAnnotationMethod("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", typeOf[JsValue], typeOf[Options])
+  println(s"mmm2: $mmm2")
+
+  println(s"serialized: ${OptionsType.serialize("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", CMakeOptions("gogadoda"))}")
+
   def annots = typeOf[CMakeOptions]
     .typeSymbol
     //.asClass
@@ -23,16 +43,23 @@ object Main extends App {
   println(s"annots: $annots")
 
   annots.foreach({ a =>
+    println(s"${a.tree} -> ${a.tree.children} -> ${a.tree.symbol.typeSignature}")
 
-    println(s"\ta.tree.symbol { ${a.tree.symbol.getClass} }: ${a.tree.symbol}")
+    println(s"${a.getClass.getTypeName} \ta.tree.symbol { ${a.tree.symbol.name} }: ${a.tree.symbol}")
 
     println(s"\tannot { ${a.getClass} }: ${a}")
     a.tree.children.foreach({ c =>
+      println(s"c.children: ${c.children}")
 
+      c.children.foreach(cc => {
+        println(s"\t\t\tcc.symbol.isMethod: ${Option(cc.symbol).map(_.isMethod)}")
+      })
+      println(s"c.symbol.isMethod: ${c.symbol.isMethod}")
       if(c.symbol.isMethod) {
-        val mm = rootMirror.reflect().reflectMethod(c.symbol.asMethod)
-        val method = c.symbol.asMethod
-        mm.apply()
+        //c.symbol.name match {
+        //  case "ser" => rootMirror.reflect().reflectMethod(c.symbol.asMethod)
+        //  case "des" => rootMirror.reflect().reflectMethod(c.symbol.asMethod)
+        //}
       }
 
       println(s"\tc.symbol { ${c.symbol.getClass} }: ${c.symbol}")
@@ -40,7 +67,8 @@ object Main extends App {
 
       if(c.isInstanceOf[scala.reflect.runtime.universe.Function]) {
         def f = c.asInstanceOf[scala.reflect.runtime.universe.Function]
-        println(s"\t\tf.isInstanceOf[Options => JsValue]: ${f.isInstanceOf[Options => JsValue]}")
+        f.symbol.isMethod
+        println(s"\t\tf.isInstanceOf f.symbol.isMethod: ${f.children}")
       } else if(c.isInstanceOf[scala.reflect.runtime.universe.Select]) {
         def s = c.asInstanceOf[scala.reflect.runtime.universe.Select]
         println(s"\t\ts.name: ${s.name}")
