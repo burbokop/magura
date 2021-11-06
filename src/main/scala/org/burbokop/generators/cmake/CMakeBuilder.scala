@@ -5,6 +5,7 @@ import org.burbokop.generators.{Generator, MaguraFile}
 import org.burbokop.models.meta.RepositoryMetaData
 import org.burbokop.utils.FileUtils
 import org.burbokop.utils.HashUtils.StringImplicits.apply
+import org.burbokop.utils.java.OptionsType
 import org.burbokop.virtualsystem.VirtualSystem
 import play.api.libs.json.{JsNull, JsString, JsValue}
 
@@ -12,11 +13,16 @@ import java.io.File
 import scala.util.{Failure, Success}
 
 object CMakeBuilder {
+
+  @OptionsType(ser = CMakeOptions.ser, des = CMakeOptions.des)
   case class CMakeOptions(prefix: String) extends Options {
     override def hashName(): String =  prefix.md5
   }
 
   object CMakeOptions {
+    def des(value: JsValue) = CMakeOptions(value.as[String])
+    def ser(options: Options) = Option(options.asInstanceOf[CMakeOptions]).map(o => JsString(o.prefix)).getOrElse(JsNull)
+
     Options.register(
       classOf[CMakeOptions],
       value => CMakeOptions(value.as[String]),
