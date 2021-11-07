@@ -56,7 +56,7 @@ case class RepositoryMetaData(
       new FileOutputStream(path).write(toJson(pretty).toArray.map(_.toByte))
       Right(this)
     } catch {
-      case e => Left(e)
+      case e: Throwable => Left(e)
     }
 
   def latestVersion(): Option[RepositoryVersion] =
