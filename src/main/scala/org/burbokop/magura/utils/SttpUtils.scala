@@ -1,6 +1,6 @@
 package org.burbokop.magura.utils
 
-import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json, Reads}
 import sttp.client3.{UriContext, asString}
 import sttp.model.Uri
 
@@ -12,6 +12,14 @@ object SttpUtils {
   final case class UnsuccessfulResponseException(uri: Uri, message: String) extends Exception(s"url: $uri, massage: $message")
 
   final case class JsonParseException(message: String, jsError: JsError, body: String) extends Exception(message)
+
+  final case class JsonValidationException(message: String, jsError: JsError) extends Exception(message)
+
+  def validateEitherThrowable[A](value: JsValue)(implicit jsonReads: Reads[A]) =
+    value.validate[A] match {
+      case s: JsSuccess[A] => Right(s.get)
+      case jsError: JsError => Left(JsonValidationException(jsError.toString, jsError))
+    }
 
   def deserializeEither[A](uri: Uri, data: Either[String, String])(implicit jsonReads: Reads[A]): Either[String, A] =
     deserializeEitherThrowable(uri, data).left.map(_.getMessage)

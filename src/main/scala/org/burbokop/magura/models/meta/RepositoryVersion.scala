@@ -7,6 +7,7 @@ case class RepositoryVersion(
                               commit: String,
                               entry: String,
                               entryPath: String,
+                              activeBuild: Option[String],
                               buildPaths: Map[String, Options],
                               builder: String
                             ) {
@@ -17,7 +18,14 @@ case class RepositoryVersion(
       .orElse(buildPaths.headOption.map(_._1))
 
   def withBuildPaths(buildPaths: Map[String, Options]) =
-    RepositoryVersion(commit, entry, entryPath, this.buildPaths ++ buildPaths, builder)
+    RepositoryVersion(
+      commit,
+      entry,
+      entryPath,
+      buildPaths.lastOption.map(_._1).orElse(activeBuild),
+      this.buildPaths ++ buildPaths,
+      builder
+    )
 }
 
 object RepositoryVersion {

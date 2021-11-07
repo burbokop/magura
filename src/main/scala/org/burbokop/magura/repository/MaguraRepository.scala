@@ -80,9 +80,10 @@ object MaguraRepository {
                     branch.commit.sha,
                     repoEntry,
                     entryFolder,
+                    buildPaths.lastOption.map(_._1),
                     buildPaths,
                     generatorName
-                  )).writeJsonToFile(metaFile, true)
+                  )).writeJsonToFile(metaFile, pretty = true)
                 } getOrElse {
                   Right(meta)
                 }

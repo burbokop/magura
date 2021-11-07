@@ -24,7 +24,7 @@ class GeneratorDistributor(generators: Map[String, Generator], generatorField: M
         generator.proceed(cache, inputFolder, path, options, maguraFile)
       })
         .toList
-        .reducesPartitionEither
+        .reducedPartitionEither
         .map(_.find(b => b).map(_ => generatorName))
     } getOrElse {
       Left(Generator.Error(s"generator $generatorName not found"))

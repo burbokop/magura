@@ -19,15 +19,13 @@ case class MaguraFile(
 object MaguraFile extends YamlReadable[MaguraFile] {
   case class Error(message: String) extends Exception(message)
 
-  def fromBuilder(builder: String) = MaguraFile(builder, "", List())
+  def fromBuilder(builder: String): MaguraFile = MaguraFile(builder, "", List())
 
-  override def fromMap(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
+  override def fromObject(map: mutable.Map[String, Any]): Either[Throwable, MaguraFile] = {
     val builder = map.get("builder").map(_.toString)
     val connector = map.get("connector").map(_.toString)
     val dependencies = map.get("dependencies").map(
-      _.asInstanceOf[java.util.ArrayList[String]].asScala.toList.map(
-        MaguraRepository.fromString(_)
-      )
+      _.asInstanceOf[java.util.ArrayList[String]].asScala.toList.map(MaguraRepository.fromString)
     ).getOrElse(List())
     if(builder.isEmpty && connector.isEmpty) {
       Left(MaguraFile.Error("builder or/and connector must be set"))

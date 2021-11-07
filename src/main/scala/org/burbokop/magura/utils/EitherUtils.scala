@@ -17,7 +17,7 @@ object EitherUtils {
   }
 
   class ThrowableListImplicits[B](list: List[Either[Throwable, B]]) {
-    def reducesPartitionEither: Either[ReducedError, List[B]] =
+    def reducedPartitionEither: Either[ReducedError, List[B]] =
       ListImplicits(list).partitionEither.left.map(ReducedError(_))
   }
 

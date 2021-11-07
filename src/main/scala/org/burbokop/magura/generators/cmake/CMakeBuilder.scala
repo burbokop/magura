@@ -3,24 +3,33 @@ package org.burbokop.magura.generators.cmake
 import org.burbokop.magura.generators.Generator.{DefaultOptions, Options}
 import org.burbokop.magura.generators.{Generator, MaguraFile}
 import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.utils.{FileUtils, OptionsType}
+import org.burbokop.magura.utils.{FileUtils, SttpUtils}
 import org.burbokop.magura.utils.HashUtils.StringImplicits.apply
+import org.burbokop.magura.utils.SttpUtils.{JsonParseException, JsonValidationException}
 import org.burbokop.magura.virtualsystem.VirtualSystem
-import play.api.libs.json.{JsNull, JsString, JsValue}
+import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue, Json}
 
 import java.io.File
 import scala.util.{Failure, Success}
 
 object CMakeBuilder {
 
-  @OptionsType(ser = CMakeOptions.ser, des = CMakeOptions.des)
+  @Options.FormatAttached(
+    serialization = CMakeOptions.serialization,
+    deserialization = CMakeOptions.deserialization
+  )
   case class CMakeOptions(prefix: String) extends Options {
-    override def hashName(): String =  prefix.md5
+    override def hashName(): String = prefix.md5
   }
 
   object CMakeOptions {
-    def des(value: JsValue) = CMakeOptions(value.as[String])
-    def ser(options: Options) = Option(options.asInstanceOf[CMakeOptions]).map(o => JsString(o.prefix)).getOrElse(JsNull)
+    implicit val jsonFormat = Json.format[CMakeOptions]
+
+    def deserialization(value: JsValue): Either[Throwable, Options] =
+      SttpUtils.validateEitherThrowable[CMakeOptions](value)
+
+    def serialization(options: Options): JsValue =
+      Json.toJson(options.asInstanceOf[CMakeOptions])
   }
 
   case class Error(message: String) extends Exception(message)
