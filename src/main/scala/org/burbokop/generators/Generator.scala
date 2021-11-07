@@ -2,6 +2,8 @@ package org.burbokop.generators
 
 import org.burbokop.generators.Generator.Options
 import org.burbokop.models.meta.RepositoryMetaData
+import org.burbokop.utils.ReflectUtils
+import org.burbokop.utils.java.OptionsType
 import play.api.libs.json.{Format, JsNull, JsObject, JsResult, JsString, JsValue, Json, Reads, Writes}
 
 import java.io.File
@@ -19,11 +21,13 @@ object Generator {
     private var registry: Map[Class[_], (JsValue => Options, Options => JsValue)] = Map()
 
     val writes = new Writes[Options] {
-      override def writes(options: Options): JsValue =
+      override def writes(options: Options): JsValue = {
+        val typePath = ReflectUtils.instanceType(options).toString
         JsObject(Map(
-          "class" -> JsString(options.getClass.toString),
-          "data" -> registry.get(options.getClass).map(_._2(options)).getOrElse(JsNull)
+          "class" -> JsString(typePath),
+          "data" -> OptionsType.serialize(typePath, options).getOrElse(JsNull)
         ))
+      }
     }
 
     val reads = new Reads[Options] {

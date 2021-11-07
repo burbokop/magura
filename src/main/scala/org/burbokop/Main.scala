@@ -3,11 +3,11 @@ package org.burbokop
 import org.burbokop.generators.Generator.Options
 import org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions
 import org.burbokop.tasks._
+import org.burbokop.utils.ReflectUtils
 import org.burbokop.utils.java.OptionsType
 import play.api.libs.json.JsValue
 
-import scala.reflect.runtime.{universe => ru}
-import ru._
+import scala.reflect.runtime.universe
 
 object Main extends App {
 
@@ -22,20 +22,13 @@ object Main extends App {
   //typeOf[CMakeOptions].typeSymbol.name
 
   //TermName("").
+  println(s"SSSS: ${universe.typeOf[CMakeOptions]}")
 
-  val a = OptionsType.annotations("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions")
-
-  println(s"AAA: $a")
-
-  val mmm = OptionsType.findAnnotationMethod("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", typeOf[Options], typeOf[JsValue])
-
-  println(s"mmm: $mmm")
-  val mmm2 = OptionsType.findAnnotationMethod("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", typeOf[JsValue], typeOf[Options])
-  println(s"mmm2: $mmm2")
+  println(s"SSS2: ${ReflectUtils.instanceType(CMakeOptions("ddd"))}")
 
   println(s"serialized: ${OptionsType.serialize("org.burbokop.generators.cmake.CMakeBuilder.CMakeOptions", CMakeOptions("gogadoda"))}")
 
-  def annots = typeOf[CMakeOptions]
+  def annots = universe.typeOf[CMakeOptions]
     .typeSymbol
     //.asClass
     .annotations
