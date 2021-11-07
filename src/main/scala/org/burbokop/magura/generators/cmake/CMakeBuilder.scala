@@ -3,9 +3,8 @@ package org.burbokop.magura.generators.cmake
 import org.burbokop.magura.generators.Generator.{DefaultOptions, Options}
 import org.burbokop.magura.generators.{Generator, MaguraFile}
 import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.utils.FileUtils
+import org.burbokop.magura.utils.{FileUtils, OptionsType}
 import org.burbokop.magura.utils.HashUtils.StringImplicits.apply
-import org.burbokop.magura.utils.java.OptionsType
 import org.burbokop.magura.virtualsystem.VirtualSystem
 import play.api.libs.json.{JsNull, JsString, JsValue}
 

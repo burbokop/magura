@@ -1,4 +1,4 @@
-package org.burbokop.magura.utils.java
+package org.burbokop.magura.utils
 
 import org.burbokop.magura.generators.Generator.Options
 import play.api.libs.json.JsValue
