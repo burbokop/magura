@@ -14,7 +14,7 @@ scalaVersion := "2.13.5"
 enablePlugins(DebianPlugin)
 debianPackageDependencies := Seq(/*"cmake",*/ "java8-runtime-headless")
 
-mainClass in assembly := Some("org.burbokop.Main")
+mainClass in assembly := Some("org.burbokop.magura.Main")
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
@@ -27,7 +27,6 @@ lazy val root = (project in file(".")).
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, target, packageName),
     buildInfoPackage := "maguraApp"
   )
-
 
 
 linuxPackageMappings := {
