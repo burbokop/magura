@@ -1,12 +1,15 @@
 package org.burbokop.magura.generators
 
 import org.burbokop.magura.generators.Generator.Options
+import org.burbokop.magura.generators.cmake.CMakeBuilder.CMakeOptions
 import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.utils.ReflectUtils
+import org.burbokop.magura.utils.OptionsType
+import org.burbokop.magura.utils.ReflectUtils._
 import play.api.libs.json.{Format, JsNull, JsObject, JsResult, JsString, JsValue, Json, Reads, Writes}
 
 import java.io.File
 import scala.collection.mutable
+import scala.reflect.runtime
 import scala.util.{Failure, Success, Try}
 
 object Generator {
@@ -17,48 +20,44 @@ object Generator {
   }
 
   object Options {
-    private var registry: Map[Class[_], (JsValue => Options, Options => JsValue)] = Map()
-
     val writes = new Writes[Options] {
       override def writes(options: Options): JsValue = {
-        val typePath = ReflectUtils.instanceType(options).toString
-        JsObject(Map(
-          "class" -> JsString(typePath),
-          "data" ->  ReflectUtils.invokeAttachedMethod[Options, JsValue](typePath, options).getOrElse(JsNull)
-        ))
+        val clazz = runtime.currentMirror.instanceType(options).toString
+        val data = runtime.currentMirror.invokeAttachedMethod[Options, JsValue](clazz, options).getOrElse(JsNull)
+        JsObject(
+          Map("class" -> JsString(clazz))
+            ++ (if(data == JsNull) Map() else Map("data" -> data))
+        )
       }
     }
 
     val reads = new Reads[Options] {
       override def reads(value: JsValue): JsResult[Options] =
-        value.validate[JsObject].flatMap(obj => JsResult.fromTry(obj.value.get("class").flatMap(clazz => {
-          obj.value.get("data").flatMap(data => registry.get(Class.forName(clazz.as[String])).map(_._1(data)))
-        }).map(Success(_)).getOrElse(Failure(new Exception("AAAA")))))
+        JsResult.fromTry(
+          value.validate[JsObject].map(obj =>
+            obj.value.get("class").map(clazz =>
+              runtime.currentMirror.invokeAttachedMethod[JsValue, Options](clazz.as[String], obj.value.getOrElse("data", JsNull))
+                .map(Right(_))
+                .getOrElse(Left(Generator.Error(s"Deserialization function not registered for: $clazz")))
+            )
+              .getOrElse(Left(Generator.Error(s"'class' field not found")))
+          )
+            .getOrElse(Left(Generator.Error(s"Json value must be an object")))
+            .toTry
+        )
     }
 
     implicit val jsonFormat = Format[Options](reads, writes)
-
-
-    private val registry1 = mutable.HashMap.empty[Class[T] forSome {type T <: Options}, (JsValue => Options, Options => JsValue)]
-
-    val a = (() => {
-      println(s"registry1: $registry1")
-    })()
-    println(s"a: $a")
-
-    def register(clazz: Class[_], read: JsValue => Options, write: Options => JsValue) = {
-      registry = registry + (clazz -> (read, write))
-      println(s"registry: $registry")
-    }
-
   }
 
+  @OptionsType(ser = DefaultOptions.ser, des = DefaultOptions.des)
   case class DefaultOptions() extends Options {
     override def hashName(): String = "default"
   }
 
   object DefaultOptions {
-    Options.register(classOf[DefaultOptions], _ => DefaultOptions(), _ => JsNull)
+    def des(value: JsValue): Options = DefaultOptions()
+    def ser(options: Options): JsValue = JsNull
   }
 
   def repositoryName(inputPath: String): String =

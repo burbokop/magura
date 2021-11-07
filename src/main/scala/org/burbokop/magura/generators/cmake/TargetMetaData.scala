@@ -19,7 +19,7 @@ object TargetMetaData {
     try {
       fromJsonStream(new FileInputStream(path))
     } catch {
-      case e => Left(e)
+      case e: Throwable => Left(e)
     }
 
   def fromJsonFile(file: File): Either[Throwable, TargetMetaData] =
@@ -48,6 +48,6 @@ case class TargetMetaData(paths: Set[String]) {
       new FileOutputStream(path).write(toJson(pretty).toArray.map(_.toByte))
       Right(this)
     } catch {
-      case e => Left(e)
+      case e: Throwable => Left(e)
     }
 }

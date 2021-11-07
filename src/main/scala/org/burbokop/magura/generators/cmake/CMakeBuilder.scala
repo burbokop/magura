@@ -21,12 +21,6 @@ object CMakeBuilder {
   object CMakeOptions {
     def des(value: JsValue) = CMakeOptions(value.as[String])
     def ser(options: Options) = Option(options.asInstanceOf[CMakeOptions]).map(o => JsString(o.prefix)).getOrElse(JsNull)
-
-    Options.register(
-      classOf[CMakeOptions],
-      value => CMakeOptions(value.as[String]),
-      options => Option(options.asInstanceOf[CMakeOptions]).map(o => JsString(o.prefix)).getOrElse(JsNull)
-    )
   }
 
   case class Error(message: String) extends Exception(message)

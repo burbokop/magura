@@ -21,7 +21,7 @@ object BuildTask extends Task {
         val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
         val builderDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeBuilder(mainVirtualSystem)), _.builder)
 
-        val opts: Set[Options] = conf.prefixes.toSet.map(p => CMakeOptions(p))
+        val opts: Set[Options] = conf.prefixes.toSet.map[Options](prefix => if(prefix == "default") DefaultOptions() else CMakeOptions(prefix))
 
         val a: Set[Options] = if(opts.size > 0) opts else Set(DefaultOptions())
 

@@ -27,7 +27,7 @@ object RepositoryMetaData {
     try {
       fromJsonStream(new FileInputStream(path))
     } catch {
-      case e => Left(e)
+      case e: Throwable => Left(e)
     }
 
   def fromJsonFile(file: File): Either[Throwable, RepositoryMetaData] =

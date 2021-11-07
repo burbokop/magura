@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxSymlink
 
 name := "magura"
 
-version := "0.0.2"
+version := "0.0.3-beta"
 
 maintainer := "Borys Boiko <burbokop@gmail.com>"
 packageSummary := "Package for downloading dependencies from github"
@@ -56,7 +56,8 @@ resolvers ++= Seq(
 libraryDependencies += "com.softwaremill.sttp.client3" %% "core" % "3.1.7"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
 libraryDependencies ++= Seq("org.yaml" % "snakeyaml" % "1.16")
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.13.5"
+libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
 
 libraryDependencies ++= Seq(
