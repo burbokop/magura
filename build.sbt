@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxSymlink
 
 name := "magura"
 
-version := "0.0.3-beta"
+version := "0.0.3-beta2"
 
 maintainer := "Borys Boiko <burbokop@gmail.com>"
 packageSummary := "Package for downloading dependencies from github"

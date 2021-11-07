@@ -1,8 +1,10 @@
 package org.burbokop.magura.models.meta
 
+import org.burbokop.magura.generators.Generator.Options
 import org.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.utils.SttpUtils.JsonParseException
 import play.api.libs.json.{JsError, JsSuccess, Json}
+
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}
 
 
@@ -46,7 +48,7 @@ case class RepositoryMetaData(
                                currentCommit: String,
                                versions: List[RepositoryVersion]
                              ) {
-  def toJson(pretty: Boolean = false) =
+  def toJson(pretty: Boolean = false): String =
     if (pretty) Json.prettyPrint(Json.toJson(this))
     else Json.stringify(Json.toJson(this))
 
@@ -64,4 +66,7 @@ case class RepositoryMetaData(
 
   def withVersion(version: RepositoryVersion): RepositoryMetaData =
     RepositoryMetaData(version.commit, this.versions :+ version)
+
+  def withBuildPaths(commit: String, buildPaths: Map[String, Options]): RepositoryMetaData =
+    RepositoryMetaData(currentCommit, versions.map { version => if(version.commit == commit) version.withBuildPaths(buildPaths) else version })
 }

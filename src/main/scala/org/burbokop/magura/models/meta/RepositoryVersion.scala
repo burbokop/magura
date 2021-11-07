@@ -5,6 +5,7 @@ import play.api.libs.json.Json
 
 case class RepositoryVersion(
                               commit: String,
+                              entry: String,
                               entryPath: String,
                               buildPaths: Map[String, Options],
                               builder: String
@@ -14,6 +15,9 @@ case class RepositoryVersion(
       .find(arg => arg._2.isInstanceOf[DefaultOptions])
       .map(_._1)
       .orElse(buildPaths.headOption.map(_._1))
+
+  def withBuildPaths(buildPaths: Map[String, Options]) =
+    RepositoryVersion(commit, entry, entryPath, this.buildPaths ++ buildPaths, builder)
 }
 
 object RepositoryVersion {

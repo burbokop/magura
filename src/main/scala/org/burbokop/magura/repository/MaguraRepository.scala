@@ -8,6 +8,7 @@ import org.burbokop.magura.utils.{ReducedError, ZipUtils}
 import org.burbokop.magura.utils.FileUtils./
 
 import java.io.{ByteArrayInputStream, File}
+import scala.annotation.tailrec
 
 case class MaguraRepository(
                              user: String,
@@ -39,6 +40,7 @@ object MaguraRepository {
 
   val metaFileName = "meta.json"
 
+
   def get(
            builderDistributor: GeneratorDistributor,
            repository: MaguraRepository,
@@ -47,15 +49,19 @@ object MaguraRepository {
          ): Either[Throwable, RepositoryMetaData] = {
     val repoFolder = s"$cacheFolder${/}${repository.user}${/}${repository.name}"
     val metaFile = s"$repoFolder${/}$metaFileName"
+
+    def genEntryFolder(repoEntry: String) = s"$repoFolder${/}$repoEntry"
+    def genBuildFolder(repoEntry: String, options: Options) = s"$repoFolder${/}build_${options.hashName()}_$repoEntry"
+
     GithubRoutes.getBranch(repository.user, repository.name, repository.branchName).body.fold(Left(_), { branch =>
       val meta = RepositoryMetaData.fromJsonFileDefault(metaFile)
       if(meta.currentCommit != branch.commit.sha) {
         GithubRoutes.downloadRepositoryZip(repository.user, repository.name, repository.branchName)
           .body.fold(e => Left(MaguraRepository.Error(e)), { data =>
           ZipUtils.unzipToFolder(new ByteArrayInputStream(data), repoFolder).fold(Left(_), { repoEntry =>
-            val entryFolder = s"$repoFolder${/}$repoEntry"
+            val entryFolder = genEntryFolder(repoEntry)
             val buildPaths: Map[String, Options] =
-              optionsSet.map(options => (s"$repoFolder${/}build_${options.hashName()}_$repoEntry", options)).toMap
+              optionsSet.map(options => (genBuildFolder(repoEntry, options), options)).toMap
 
             println(s"optionsSet: $optionsSet")
             println(s"entryFolder: $entryFolder")
@@ -66,12 +72,13 @@ object MaguraRepository {
                 RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
                 entryFolder,
                 buildPaths,
-                repository.builder.map(MaguraFile.fromBuilder(_))
+                repository.builder.map(MaguraFile.fromBuilder)
               )
               .fold[Either[Throwable, RepositoryMetaData]](Left(_), generatorName => {
                 generatorName.map { generatorName =>
                   meta.withVersion(RepositoryVersion(
                     branch.commit.sha,
+                    repoEntry,
                     entryFolder,
                     buildPaths,
                     generatorName
@@ -82,9 +89,42 @@ object MaguraRepository {
               })
           })
         })
-      } else {
-        Right(meta)
+      } else Right(meta)
+    }).flatMap(meta => {
+      def iterator(versions: List[RepositoryVersion], acc: RepositoryMetaData): Either[Throwable, RepositoryMetaData] = {
+        val res = versions.headOption.map({ version =>
+          val buildPaths: Map[String, Options] = {
+            println(s"optionsSet: $optionsSet diff verOpts: ${version.buildPaths.values.toSet} = ${optionsSet.diff(version.buildPaths.values.toSet)}")
+
+            optionsSet
+              .diff(version.buildPaths.values.toSet)
+              .map(options => (genBuildFolder(version.entry, options), options))
+              .toMap
+          }
+
+          builderDistributor
+            .proceed(
+              RepositoryMetaData.fromFolder(new File(cacheFolder), metaFileName, 3),
+              version.entryPath,
+              buildPaths,
+              repository.builder.map(MaguraFile.fromBuilder)
+            ).fold[Either[Throwable, RepositoryMetaData]](Left(_), generatorName => {
+            generatorName.map { generatorName =>
+              meta
+                .withBuildPaths(version.commit, buildPaths)
+                .writeJsonToFile(metaFile, true)
+            } getOrElse {
+              Right(meta)
+            }
+          })
+            .fold(Left(_), iterator(versions.tail, _))
+        })
+          .getOrElse(Right(acc))
+        println(s"iter versions: $versions, acc: $acc -> $res")
+        res
       }
+
+      iterator(meta.versions, meta)
     })
   }
 
