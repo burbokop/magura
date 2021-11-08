@@ -7,7 +7,7 @@ case class RepositoryVersion(
                               commit: String,
                               entry: String,
                               entryPath: String,
-                              activeBuild: Option[String],
+                              activeBuildPath: Option[String],
                               buildPaths: Map[String, Options],
                               builder: String
                             ) {
@@ -22,7 +22,7 @@ case class RepositoryVersion(
       commit,
       entry,
       entryPath,
-      buildPaths.lastOption.map(_._1).orElse(activeBuild),
+      buildPaths.lastOption.map(_._1).orElse(activeBuildPath),
       this.buildPaths ++ buildPaths,
       builder
     )

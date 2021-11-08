@@ -50,7 +50,7 @@ object ConfigureBuilder {
              inputPath: String,
              outputPath: String
            ): Either[Throwable, Unit] = {
-    virtualSystem.installLatestVersionRepositories(cache).fold(Left(_), { _ =>
+    virtualSystem.update(cache).fold(Left(_), { _ =>
       val env = virtualSystem.env
       val configPath = s"$inputPath${File.separator}configure"
       if (new File(configPath).isFile) {

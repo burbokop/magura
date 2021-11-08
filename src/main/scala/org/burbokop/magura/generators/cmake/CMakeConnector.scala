@@ -92,7 +92,7 @@ object CMakeConnector {
                     virtualSystem: VirtualSystem,
                     projectFile: String
                   ): Either[Throwable, Boolean] = {
-    virtualSystem.installLatestVersionRepositories(metas).fold(Left(_), { oks =>
+    virtualSystem.update(metas).fold(Left(_), { oks =>
       if(oks.forall(b => b)) {
         val projects = (for(m <- metas) yield {
           m.latestVersion().flatMap { version =>

@@ -41,7 +41,7 @@ object CMakeBuilder {
                   outputPath: String,
                   options: Options,
                 ): Either[Throwable, Unit] =
-    virtualSystem.installLatestVersionRepositories(cache).fold(Left(_), { _ =>
+    virtualSystem.update(cache).fold(Left(_), { _ =>
       val env = virtualSystem.env
       val cmakePath = s"$inputPath${File.separator}CMakeLists.txt"
       if (new File(cmakePath).isFile) {
