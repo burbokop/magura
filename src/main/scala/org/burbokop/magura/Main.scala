@@ -8,31 +8,18 @@ import play.api.libs.json.{JsValue, Json}
 
 import scala.reflect.runtime
 import scala.reflect.runtime.{universe => ru}
+import io.github.burbokop.magura.api.Plugin
+import org.burbokop.magura.repository.MaguraRepository
 
+import java.io.File
 
 object Main extends App {
+  val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
 
+  val res = MaguraRepository.fromString("burbokop.magura_test_plugin.master")
+    .fold(Left(_), repo => PluginLoader.load(repo, cacheFolder))
 
-  def debugOptions(opt: Options) = {
-    val optJson = Json.stringify(Json.toJson[Options](opt))
-    val desOpt = Json.parse(optJson).validate[Options]
-
-    println(s"opt: $opt")
-    println(s"optJson: $optJson")
-    println(s"desOpt: $desOpt")
-
-  }
-
-  debugOptions(CMakeOptions("gog"))
-  debugOptions(DefaultOptions())
-
-
-  val it = runtime.currentMirror.instanceType(CMakeOptions("ddd"))
-  println(s"SSS2: $it")
-
-  println(s"annot0: ${runtime.currentMirror.annotations(it.toString)}")
-
-  println(s"serialized: ${runtime.currentMirror.invokeAttachedMethod[Options, JsValue](it.toString, CMakeOptions("gogadoda"))}")
+  println(s"load res: ${res}")
 
   val help =
     """

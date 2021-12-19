@@ -34,17 +34,17 @@ object ReflectUtils {
     }
 
     def findAnnotationMethod(`class`: String, argType: universe.Type, resType: universe.Type): Option[universe.Tree] = {
-      println("A0")
+      //println("A0")
       var result: Option[universe.Tree] = None
       annotations(`class`).find(annotation => {
-        println(s"\tA1: $annotation")
+        //println(s"\tA1: $annotation")
         annotation.tree.children.find(child => {
-          println(s"\t\tA2: $child -> ${Option(child.symbol).map(_.isMethod)}")
+          //println(s"\t\tA2: $child -> ${Option(child.symbol).map(_.isMethod)}")
           child.children.find(childOfChild => {
-            println(s"\t\t\tA3: $childOfChild")
+            //println(s"\t\t\tA3: $childOfChild")
             if (Option(childOfChild.symbol).exists(_.isMethod)) {
               val method = childOfChild.symbol.asMethod
-              println(s"\t\t\tA4: $method")
+              //println(s"\t\t\tA4: $method")
               if (method.paramLists.exists(paramList => paramList.length == 1 && paramList.head.typeSignature <:< argType) && method.typeSignature.resultType <:< resType) {
                 result = Some(childOfChild)
                 true

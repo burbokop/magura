@@ -8,7 +8,12 @@ import scala.io.Source
 object FileUtils {
   implicit def / = File.separator
 
-  def pwd(): String = new java.io.File(".").getCanonicalPath
+  implicit class RichFile(val file : java.io.File) {
+    def /(component: String): java.io.File =
+      new File(s"${file.getPath}${FileUtils./}$component")
+  }
+
+    def pwd(): String = new java.io.File(".").getCanonicalPath
 
   @tailrec
   def normalizeFolder(folder: File): File =

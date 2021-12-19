@@ -11,8 +11,11 @@ packageDescription := "Description"
 
 scalaVersion := "2.13.5"
 
+
+javaOptions in Universal ++= Seq(s"-version=16")
+
 enablePlugins(DebianPlugin)
-debianPackageDependencies := Seq(/*"cmake",*/ "java8-runtime-headless")
+debianPackageDependencies := Seq(/*"cmake",*/ "java9-runtime-headless")
 
 mainClass in assembly := Some("org.burbokop.magura.Main")
 
@@ -49,6 +52,8 @@ linuxPackageMappings := {
 linuxPackageSymlinks += LinuxSymlink("/usr/bin/magura" ,"/usr/share/magura/bin/magura")
 
 
+val aaa = new File("fff") / "ddfdf"
+
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
@@ -58,7 +63,7 @@ libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
 libraryDependencies ++= Seq("org.yaml" % "snakeyaml" % "1.16")
 libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-
+libraryDependencies += "io.github.burbokop" % "magura_api_2.13" % "0.1.3"
 
 libraryDependencies ++= Seq(
   "com.concurrentthought.cla" %% "command-line-arguments"          % "0.6.0",
