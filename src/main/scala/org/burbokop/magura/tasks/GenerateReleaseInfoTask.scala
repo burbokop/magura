@@ -1,6 +1,6 @@
 package org.burbokop.magura.tasks
 
-import org.burbokop.magura.repository.MaguraRepository
+import io.github.burbokop.magura.repository.MaguraRepository
 import org.burbokop.magura.routes.git.GithubRoutes
 
 import java.io.{File, FileOutputStream}

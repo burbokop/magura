@@ -1,13 +1,15 @@
 package org.burbokop.magura.buildcfg
 
-import org.burbokop.magura.buildcfg
-import org.burbokop.magura.repository.MaguraRepository
-import org.burbokop.magura.utils.EitherUtils.ThrowableListImplicits
-import org.burbokop.magura.utils.YamlReadable
-import play.api.libs.json.JsObject
+import io.github.burbokop.magura.repository.MaguraRepository
+import io.github.burbokop.magura.utils.EitherUtils.ThrowableListImplicits.apply
+import io.github.burbokop.magura.utils.YamlReadable
 
-import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala}
-import org.burbokop.magura.utils.EitherUtils.ThrowableListImplicits._
+import scala.collection.JavaConverters.{collectionAsScalaIterableConverter, mapAsScalaMapConverter}
+/*
+ * FOR SCALA 1.13 USE THIS
+ * import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala}
+ */
+
 
 case class BuildPrefix(path: String, isMain: Boolean)
 
@@ -44,7 +46,8 @@ object BuildConfiguration extends YamlReadable[BuildConfiguration] {
                 case str: String => Right(BuildPrefix(str, isMain = false))
                 case _ => Left(Error("null prefix", None))
               }
-            ThrowableListImplicits(p).reducedPartitionEither.map(BuildConfiguration(repository, _))
+            Left(new Exception("not implemented"))
+            //p.reducedPartitionEither.map(BuildConfiguration(repository, _))
           })
       })
       .getOrElse(Left(BuildConfiguration.Error("repository must be set", None)))

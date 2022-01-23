@@ -1,7 +1,8 @@
 package org.burbokop.magura.tasks
 
-import org.burbokop.magura.generators.GeneratorDistributor
-import org.burbokop.magura.utils.FileUtils
+import io.github.burbokop.magura.api.GeneratorDistributor
+import io.github.burbokop.magura.utils.FileUtils
+
 
 object InitTask extends Task {
   override def exec(args: Array[String]): Unit = {

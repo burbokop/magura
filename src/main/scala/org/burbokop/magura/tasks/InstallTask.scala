@@ -1,9 +1,9 @@
 package org.burbokop.magura.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.magura.generators.GeneratorDistributor
+import io.github.burbokop.magura.api.GeneratorDistributor
+import io.github.burbokop.magura.repository.MaguraRepository
 import org.burbokop.magura.generators.cmake.CMakeBuilder
-import org.burbokop.magura.repository.MaguraRepository
 import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -21,14 +21,20 @@ object InstallTask extends Task {
       MaguraRepository.fromString(p).fold(Left(_), { repository =>
         println(s"installing: github.com/${repository.user}/${repository.name} (branch: ${repository.branchName}, builder: ${repository.builder.getOrElse("<default>")})")
         val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
-        val builderDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeBuilder(mainVirtualSystem)), _.builder)
-        MaguraRepository.get(builderDistributor, repository, cacheFolder).fold({ err =>
-          println(s"error: $err")
-          Left(err)
-        }, { message =>
-          println(message)
-          Right(message)
-        })
+        val builderDistributor = new GeneratorDistributor(
+          Map("cmake" -> new CMakeBuilder(mainVirtualSystem)),
+          Map(),
+          _.builder
+        )
+        MaguraRepository.get(builderDistributor, repository, cacheFolder)
+          ._2
+          .fold({ err =>
+            println(s"error: $err")
+            Left(err)
+          }, { message =>
+            println(message)
+            Right(message)
+          })
       })
     }
     println(result)

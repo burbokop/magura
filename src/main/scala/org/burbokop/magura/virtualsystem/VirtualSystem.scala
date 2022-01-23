@@ -1,13 +1,14 @@
 package org.burbokop.magura.virtualsystem
 
-import org.burbokop.magura.models.meta.{RepositoryMetaData, RepositoryVersion}
-import org.burbokop.magura.utils.FileUtils
-import org.burbokop.magura.virtualsystem.VirtualSystem.{Installer, defaultInstaller}
+
+import io.github.burbokop.magura.models.meta.{RepositoryMetaData, RepositoryVersion}
+import io.github.burbokop.magura.utils.FileUtils
+import io.github.burbokop.magura.utils.EitherUtils.ListImplicits._
+
+
+import org.burbokop.magura.virtualsystem.VirtualSystem.Installer
 
 import scala.reflect.io.Directory
-import org.burbokop.magura.utils.EitherUtils.ListImplicits.apply
-import org.burbokop.magura.virtualsystem.VirtualSystem.createEnvironment
-
 import java.io.File
 
 object VirtualSystem {
@@ -31,13 +32,13 @@ class VirtualSystem(path: String, installers: Map[String, Installer] = Map()) {
   def bin(): String = path + File.separator + "bin"
   def include(): String = path + File.separator + "include"
   def lib(): String = path + File.separator + "lib"
-  def env(): Seq[(String, String)] = createEnvironment(
+  def env(): Seq[(String, String)] = VirtualSystem.createEnvironment(
     "PATH" -> bin,
     "CPATH" -> include,
     "LD_LIBRARY_PATH" -> lib
   )
 
-  def installRepository(metaData: RepositoryVersion, installer: Installer = defaultInstaller): Either[Throwable, Boolean] =
+  def installRepository(metaData: RepositoryVersion, installer: Installer = VirtualSystem.defaultInstaller): Either[Throwable, Boolean] =
     metaData.activeBuildPath
       .map(installer(_, path).map(_ => true))
       .getOrElse(Right(false))
@@ -45,7 +46,7 @@ class VirtualSystem(path: String, installers: Map[String, Installer] = Map()) {
   def installLatestVersionRepository(repos: RepositoryMetaData): Either[Throwable, Boolean] =
     repos
       .latestVersion
-      .map(version => installRepository(version, installers.getOrElse(version.builder, defaultInstaller)))
+      .map(version => installRepository(version, installers.getOrElse(version.builder, VirtualSystem.defaultInstaller)))
       .getOrElse(Right(false))
 
   def installLatestVersionRepositories(repos: List[RepositoryMetaData]): Either[Throwable, List[Boolean]] = {

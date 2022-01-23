@@ -1,16 +1,15 @@
 package org.burbokop.magura.generators.cmake
 
-import org.burbokop.magura.generators.Generator.{DefaultOptions, Options}
-import org.burbokop.magura.generators.{Generator, MaguraFile}
-import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.utils.{FileUtils, SttpUtils}
-import org.burbokop.magura.utils.HashUtils.StringImplicits.apply
-import org.burbokop.magura.utils.SttpUtils.{JsonParseException, JsonValidationException}
-import org.burbokop.magura.virtualsystem.VirtualSystem
-import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue, Json}
+import io.github.burbokop.magura.api.{Generator, MaguraFile}
+import io.github.burbokop.magura.api.Generator.Options
+import io.github.burbokop.magura.models.meta
+import io.github.burbokop.magura.models.meta.RepositoryMetaData
+import io.github.burbokop.magura.utils.HashUtils.StringImplicits.apply
+import io.github.burbokop.magura.utils.{FileUtils, JsonUtils}
+import play.api.libs.json.{JsValue, Json}
+import org.burbokop.magura.virtualsystem._
 
 import java.io.File
-import scala.util.{Failure, Success}
 
 object CMakeBuilder {
 
@@ -26,7 +25,7 @@ object CMakeBuilder {
     implicit val jsonFormat = Json.format[CMakeOptions]
 
     def deserialization(value: JsValue): Either[Throwable, Options] =
-      SttpUtils.validateEitherThrowable[CMakeOptions](value)
+      JsonUtils.validateEitherThrowable[CMakeOptions](value)
 
     def serialization(options: Options): JsValue =
       Json.toJson(options.asInstanceOf[CMakeOptions])
@@ -79,7 +78,7 @@ object CMakeBuilder {
       outputFolder.mkdirs();
     }
     val inputFolder = new File(inputPath)
-    FileUtils.recursiveListFiles(inputFolder).map[Either[Throwable, Unit]] { file =>
+    FileUtils.recursiveListFiles(inputFolder).map { file =>
       val path: String = file.getPath
       val newPath = outputPath +
         File.separator +
@@ -89,11 +88,12 @@ object CMakeBuilder {
         File.separator +
         path.substring(inputPath.length, path.length)
 
-      if (path.endsWith(".h") || path.endsWith(".hpp")) {
+      val a = if (path.endsWith(".h") || path.endsWith(".hpp")) {
         FileUtils.copyFile(path, newPath)
       } else {
         Right()
       }
+      a
     }
       .find(_.isLeft).getOrElse(Right())
   }
@@ -101,14 +101,15 @@ object CMakeBuilder {
 
 class CMakeBuilder(virtualSystem: VirtualSystem) extends Generator {
   override def proceed(
-                        cache: List[RepositoryMetaData],
+                        cache: List[meta.RepositoryMetaData],
                         inputPath: String,
                         outputPath: String,
                         options: Options,
                         maguraFile: MaguraFile
-                      ): Either[Throwable, Boolean] = {
-    CMakeBuilder.buildCMake(cache, virtualSystem, inputPath, outputPath, options).fold[Either[Throwable, Boolean]](Left(_), { _ =>
-      CMakeBuilder.copyHeaders(inputPath, outputPath).map(_ => true)
-    })
-  }
+                      ): Either[Throwable, Generator.Result] =
+    CMakeBuilder
+      .buildCMake(cache, virtualSystem, inputPath, outputPath, options)
+      .fold[Either[Throwable, Generator.Result]](Left(_), { _ =>
+        CMakeBuilder.copyHeaders(inputPath, outputPath).map(_ => Generator.Result(true))
+      })
 }

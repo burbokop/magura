@@ -1,25 +1,10 @@
 package org.burbokop.magura
 
-import org.burbokop.magura.generators.Generator.{DefaultOptions, Options}
-import org.burbokop.magura.generators.cmake.CMakeBuilder.CMakeOptions
 import org.burbokop.magura.tasks._
-import org.burbokop.magura.utils.ReflectUtils._
-import play.api.libs.json.{JsValue, Json}
-
-import scala.reflect.runtime
-import scala.reflect.runtime.{universe => ru}
-import io.github.burbokop.magura.api.Plugin
-import org.burbokop.magura.repository.MaguraRepository
-
 import java.io.File
 
 object Main extends App {
   val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
-
-  val res = MaguraRepository.fromString("burbokop.magura_test_plugin.master")
-    .fold(Left(_), repo => PluginLoader.load(repo, cacheFolder))
-
-  println(s"load res: ${res}")
 
   val help =
     """
@@ -43,6 +28,7 @@ object Main extends App {
       case "info" => CacheInfoTask.exec(args.tail)
       case "build" => BuildTask.exec(args.tail)
       case "version" => println(s"${maguraApp.BuildInfo.name} ${maguraApp.BuildInfo.version}")
+      case "load-plugin" => LoadTask.exec(args.tail)
       case _ => println(help)
     }
   } else {

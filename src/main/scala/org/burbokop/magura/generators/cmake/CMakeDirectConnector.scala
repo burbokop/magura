@@ -1,11 +1,11 @@
 package org.burbokop.magura.generators.cmake
 
-import org.burbokop.magura.generators.Generator.Options
+import io.github.burbokop.magura.api.Generator.Options
+import io.github.burbokop.magura.api.{Generator, GeneratorDistributor, MaguraFile}
+import io.github.burbokop.magura.models.meta.RepositoryMetaData
+import io.github.burbokop.magura.repository.MaguraRepository
+import io.github.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.generators.cmake.CMakeDirectConnector.connectMetas
-import org.burbokop.magura.generators.{Generator, GeneratorDistributor, MaguraFile}
-import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.repository.MaguraRepository
-import org.burbokop.magura.utils.FileUtils
 
 import java.io.File
 import scala.language.{implicitConversions, postfixOps}
@@ -91,10 +91,11 @@ class CMakeDirectConnector(
                         outputPath: String,
                         options: Options,
                         maguraFile: MaguraFile
-                      ): Either[Throwable, Boolean] = {
+                      ): Either[Throwable, Generator.Result] = {
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
+      ._2
       .fold(Left(_), { metas =>
-        connectMetas(metas, outputPath)
+        connectMetas(metas, outputPath).map(Generator.Result(_))
       })
   }
 }

@@ -1,12 +1,12 @@
 package org.burbokop.magura.tasks
 
 import com.concurrentthought.cla._
-import org.burbokop.magura.generators.Generator.DefaultOptions
+import io.github.burbokop.magura.api.Generator.DefaultOptions
+import io.github.burbokop.magura.api.GeneratorDistributor
+import io.github.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.generators.cmake.{CMakeBuilder, CMakeConnector}
-import org.burbokop.magura.generators.GeneratorDistributor
 import org.burbokop.magura.generators.configure.ConfigureBuilder
-import org.burbokop.magura.utils.ErrorUtils.ThrowableImplicits.apply
-import org.burbokop.magura.utils.FileUtils
+
 import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -37,19 +37,23 @@ object ConnectTask extends Task {
     val builderDistributor = new GeneratorDistributor(Map(
       "cmake" -> new CMakeBuilder(mainVirtualSystem),
       "configure" -> new ConfigureBuilder(mainVirtualSystem)
-    ), _.builder)
+    ), Map(), _.builder)
 
     val connectorDistributor = new GeneratorDistributor(Map(
       "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem, projectFile)
-    ), _.connector)
+    ), Map(), _.connector)
 
     connectorDistributor.proceed(List(), input, Map(output -> DefaultOptions()), None).fold({ error =>
-      error.print(true)
-    }, { generatorName =>
-      generatorName.map { generatorName =>
-        println(s"magura connected with generator '$generatorName'")
+      error.printStackTrace
+    }, { newGenerator =>
+      newGenerator.lastGeneration.map { lastGeneration =>
+        if(lastGeneration.changed) {
+          println(s"magura connected with generator '${lastGeneration.generatorName}'")
+        } else {
+          println(s"magura already connected")
+        }
       } getOrElse {
-        println(s"magura already connected")
+        println(s"magura not connected")
       }
     })
   }

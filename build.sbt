@@ -9,13 +9,11 @@ maintainer := "Borys Boiko <burbokop@gmail.com>"
 packageSummary := "Package for downloading dependencies from github"
 packageDescription := "Description"
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.12.2"
 
-
-javaOptions in Universal ++= Seq(s"-version=16")
 
 enablePlugins(DebianPlugin)
-debianPackageDependencies := Seq(/*"cmake",*/ "java9-runtime-headless")
+debianPackageDependencies := Seq("cmake", "java9-runtime-headless")
 
 mainClass in assembly := Some("org.burbokop.magura.Main")
 
@@ -58,12 +56,19 @@ resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
+
+libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+
+libraryDependencies += "com.googlecode.scalascriptengine" %% "scalascriptengine" % "1.3.11"
+
 libraryDependencies += "com.softwaremill.sttp.client3" %% "core" % "3.1.7"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
 libraryDependencies ++= Seq("org.yaml" % "snakeyaml" % "1.16")
-libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value
-libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-libraryDependencies += "io.github.burbokop" % "magura_api_2.13" % "0.1.3"
+libraryDependencies += "io.github.burbokop" % "magura_api_2.12" % "0.1.6"
+
+
 
 libraryDependencies ++= Seq(
   "com.concurrentthought.cla" %% "command-line-arguments"          % "0.6.0",

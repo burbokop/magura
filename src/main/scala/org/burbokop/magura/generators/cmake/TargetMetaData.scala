@@ -1,6 +1,6 @@
 package org.burbokop.magura.generators.cmake
 
-import org.burbokop.magura.utils.SttpUtils.JsonParseException
+import io.github.burbokop.magura.utils.JsonUtils.JsonParseException
 import play.api.libs.json.{JsError, JsSuccess, Json}
 
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}

@@ -1,14 +1,14 @@
 package org.burbokop.magura.generators.cmake
 
-import org.burbokop.magura.generators.Generator.Options
+import io.github.burbokop.magura.api.Generator.Options
+import io.github.burbokop.magura.api.{Generator, GeneratorDistributor, MaguraFile}
+import io.github.burbokop.magura.models.meta.RepositoryMetaData
+import io.github.burbokop.magura.repository.MaguraRepository
+import io.github.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.generators.cmake.CMakeConnector.connectMetas
-import org.burbokop.magura.generators.{Generator, GeneratorDistributor, MaguraFile}
-import org.burbokop.magura.models.meta.RepositoryMetaData
-import org.burbokop.magura.repository.MaguraRepository
-import org.burbokop.magura.utils.FileUtils
-import org.burbokop.magura.utils.HashUtils.StringImplicits.apply
-import org.burbokop.magura.virtualsystem.VirtualSystem
+import io.github.burbokop.magura.utils.HashUtils.StringImplicits.apply
 import play.api.libs.json.Json
+import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
 import scala.Console._
@@ -143,9 +143,11 @@ class CMakeConnector(
                         outputPath: String,
                         options: Options,
                         maguraFile: MaguraFile
-                      ): Either[Throwable, Boolean] =
+                      ): Either[Throwable, Generator.Result] =
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
+      ._2
       .fold(Left(_), { metas =>
         connectMetas(metas, inputPath, outputPath, virtualSystem, projectFile)
+          .map(Generator.Result(_))
       })
 }

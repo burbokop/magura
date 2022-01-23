@@ -1,9 +1,8 @@
 package org.burbokop.magura.generators.configure
 
-import org.burbokop.magura.generators.Generator.Options
-import org.burbokop.magura.generators.cmake.CMakeBuilder
-import org.burbokop.magura.generators.{Generator, MaguraFile}
-import org.burbokop.magura.models.meta.RepositoryMetaData
+import io.github.burbokop.magura.api.{Generator, MaguraFile}
+import io.github.burbokop.magura.api.Generator.Options
+import io.github.burbokop.magura.models.meta.RepositoryMetaData
 import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -43,6 +42,7 @@ object ConfigureBuilder {
       )
     }
 
+  case class Error(message: String) extends Exception(message)
 
   def build(
              cache: List[RepositoryMetaData],
@@ -67,10 +67,10 @@ object ConfigureBuilder {
         if (r0 == 0 && r1 == 0) {
           Right()
         } else {
-          Left(CMakeBuilder.Error(s"error code: $r0, $r1"))
+          Left(ConfigureBuilder.Error(s"error code: $r0, $r1"))
         }
       } else {
-        Left(CMakeBuilder.Error("CMakeLists.txt not found"))
+        Left(ConfigureBuilder.Error("CMakeLists.txt not found"))
       }
     })
   }
@@ -83,7 +83,7 @@ class ConfigureBuilder(virtualSystem: VirtualSystem) extends Generator {
                         outputPath: String,
                         options: Options,
                         maguraFile: MaguraFile
-                      ): Either[Throwable, Boolean] = {
-    ConfigureBuilder.build(cache, virtualSystem, inputPath, outputPath).map(_ => true)
+                      ): Either[Throwable, Generator.Result] = {
+    ConfigureBuilder.build(cache, virtualSystem, inputPath, outputPath).map(_ => Generator.Result(true))
   }
 }
