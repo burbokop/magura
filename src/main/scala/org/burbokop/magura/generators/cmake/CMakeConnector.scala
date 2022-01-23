@@ -89,8 +89,7 @@ object CMakeConnector {
                     metas: List[RepositoryMetaData],
                     inputPath: String,
                     outputPath: String,
-                    virtualSystem: VirtualSystem,
-                    projectFile: String
+                    virtualSystem: VirtualSystem
                   ): Either[Throwable, Boolean] = {
     virtualSystem.update(metas).fold(Left(_), { oks =>
       if(oks.forall(b => b)) {
@@ -134,8 +133,7 @@ object CMakeConnector {
 class CMakeConnector(
                       builderDistributor: GeneratorDistributor,
                       cacheFolder: String,
-                      virtualSystem: VirtualSystem,
-                      projectFile: String
+                      virtualSystem: VirtualSystem
                     ) extends Generator {
   override def proceed(
                         cache: List[RepositoryMetaData],
@@ -147,7 +145,7 @@ class CMakeConnector(
     MaguraRepository.get(builderDistributor, maguraFile.dependencies, cacheFolder)
       ._2
       .fold(Left(_), { metas =>
-        connectMetas(metas, inputPath, outputPath, virtualSystem, projectFile)
+        connectMetas(metas, inputPath, outputPath, virtualSystem)
           .map(Generator.Result(_))
       })
 }

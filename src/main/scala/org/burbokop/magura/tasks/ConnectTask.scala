@@ -6,7 +6,7 @@ import io.github.burbokop.magura.api.GeneratorDistributor
 import io.github.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.generators.cmake.{CMakeBuilder, CMakeConnector}
 import org.burbokop.magura.generators.configure.ConfigureBuilder
-
+import org.burbokop.magura.plugins.CppConnectPlugin
 import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -31,17 +31,8 @@ object ConnectTask extends Task {
     println(s"${GREEN}project folder: $input$RESET")
     println(s"${GREEN}output folder: $output$RESET")
 
-    val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
-    val mainVirtualSystem = new VirtualSystem(System.getenv("HOME") + File.separator + ".magura/vsys")
-
-    val builderDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeBuilder(mainVirtualSystem),
-      "configure" -> new ConfigureBuilder(mainVirtualSystem)
-    ), Map(), _.builder)
-
-    val connectorDistributor = new GeneratorDistributor(Map(
-      "cmake" -> new CMakeConnector(builderDistributor, cacheFolder, mainVirtualSystem, projectFile)
-    ), Map(), _.connector)
+    val plugin = new CppConnectPlugin()
+    val connectorDistributor = plugin.newDistributor()
 
     connectorDistributor.proceed(List(), input, Map(output -> DefaultOptions()), None).fold({ error =>
       error.printStackTrace

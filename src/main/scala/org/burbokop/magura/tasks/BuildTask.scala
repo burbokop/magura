@@ -7,6 +7,7 @@ import io.github.burbokop.magura.utils.FileUtils
 import org.burbokop.magura.buildcfg.{BuildConfiguration, BuildPrefix}
 import org.burbokop.magura.generators.cmake.CMakeBuilder
 import org.burbokop.magura.generators.cmake.CMakeBuilder.CMakeOptions
+import org.burbokop.magura.plugins.CppBuildPlugin
 import org.burbokop.magura.virtualsystem.VirtualSystem
 
 import java.io.File
@@ -18,14 +19,13 @@ object BuildTask extends Task {
     val result = BuildConfiguration.fromYaml(s"${FileUtils.pwd()}/build.yaml")
       .fold(Left(_), conf => {
         println(s"conf: $conf")
-        val cacheFolder = System.getenv("HOME") + File.separator + ".magura/repos"
-        val builderDistributor = new GeneratorDistributor(Map("cmake" -> new CMakeBuilder(mainVirtualSystem)), Map(), _.builder)
+
+        val plugin = new CppBuildPlugin()
 
         val opts: Set[Options] = conf.prefixes.toSet.map({ prefix: BuildPrefix => if(prefix.isMain) DefaultOptions() else CMakeOptions(prefix.path) })
+        val defaultedOpts: Set[Options] = if(opts.size > 0) opts else Set(DefaultOptions())
 
-        val a: Set[Options] = if(opts.size > 0) opts else Set(DefaultOptions())
-
-        MaguraRepository.get(builderDistributor, conf.repository, cacheFolder, a)
+        MaguraRepository.get(plugin.newDistributor(), conf.repository, plugin.cacheFolder, defaultedOpts)
           ._2
           .fold({ err =>
             println(s"error: $err")
