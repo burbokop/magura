@@ -19,6 +19,6 @@ class CorePlugin extends Plugin {
     "cmake" -> new CMakeBuilder(),
     "configure" -> new ConfigureBuilder(),
     "cmake-connector" -> new CMakeConnector(),
-    "cmake-direct-connector" -> new CMakeDirectConnector()
+    "cmake-dc" -> new CMakeDirectConnector()
   )
 }
