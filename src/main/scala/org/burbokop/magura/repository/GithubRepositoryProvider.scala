@@ -1,6 +1,6 @@
 package org.burbokop.magura.repository
 
-import io.github.burbokop.magura.models.repository.{RepositoryBranch, RepositoryRelease}
+import io.github.burbokop.magura.models.repository.{RepositoryBranch, RepositoryCommit, RepositoryRelease}
 import io.github.burbokop.magura.repository.RepositoryProvider
 import org.burbokop.magura.routes.git.GithubRoutes
 
@@ -22,4 +22,9 @@ class GithubRepositoryProvider extends RepositoryProvider {
       .body
       .left
       .map(new Exception(_))
+
+  override def commit(user: String, repo: String, hash: String): Either[Throwable, RepositoryCommit] =
+    GithubRoutes.getCommit(user, repo, hash)
+      .body
+      .map(_.asApi)
 }

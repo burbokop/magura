@@ -5,7 +5,7 @@ CURRENT_DIR=`pwd`
 cd $SCRIPT_DIR/..
 
 if [[ "$1" != "--offline" ]]; then
-  sbt "run generate-release-info burbokop.magura"
+  sbt "run generate-release-info github.com:burbokop.magura"
 fi
 sbt assembly
 sbt debian:packageBin

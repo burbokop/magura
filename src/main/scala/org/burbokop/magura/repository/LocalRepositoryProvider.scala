@@ -1,6 +1,5 @@
 package org.burbokop.magura.repository
 
-import com.github.benmanes.caffeine.cache.Cache
 import io.github.burbokop.magura.models.repository.{RepositoryBranch, RepositoryCommit, RepositoryRelease}
 import io.github.burbokop.magura.repository.RepositoryProvider
 import io.github.burbokop.magura.utils.FileUtils
@@ -70,4 +69,6 @@ class LocalRepositoryProvider extends RepositoryProvider {
 
   override def downloadZip(user: String, repo: String, branch: String): Either[Throwable, Array[Byte]] =
     Left(new Exception("not implemented"))
+
+  override def commit(user: String, repo: String, hash: String): Either[Throwable, RepositoryCommit] = ???
 }

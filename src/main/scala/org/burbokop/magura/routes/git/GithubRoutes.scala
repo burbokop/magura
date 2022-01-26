@@ -1,7 +1,7 @@
 package org.burbokop.magura.routes.git
 
 import org.burbokop.magura.utils.SttpUtils
-import org.burbokop.magura.models.git.{GithubBranch, GithubRelease}
+import org.burbokop.magura.models.git.{GithubBranch, GithubCommit, GithubRelease}
 import sttp.client3.{HttpURLConnectionBackend, UriContext, asByteArray, asString, basicRequest}
 
 object GithubRoutes {
@@ -10,6 +10,15 @@ object GithubRoutes {
       .header("Accept", "application/vnd.github.v3+json")
       .get(uri"https://api.github.com/repos/$user/$repo")
       .response(asString)
+      .send(HttpURLConnectionBackend())
+  }
+
+  def getCommit(user: String, repo: String, sha: String) = {
+    val uri = uri"https://api.github.com/repos/$user/$repo/git/commits/$sha"
+    basicRequest
+      .header("Accept", "application/vnd.github.v3+json")
+      .get(uri)
+      .response(SttpUtils.asThrowable[GithubCommit](uri))
       .send(HttpURLConnectionBackend())
   }
 

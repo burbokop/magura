@@ -1,6 +1,8 @@
 package org.burbokop.magura
 
+import org.burbokop.magura.routes.git.GithubRoutes
 import org.burbokop.magura.tasks._
+
 import java.io.File
 
 object Main extends App {

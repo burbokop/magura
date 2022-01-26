@@ -20,7 +20,7 @@ object InstallTask extends Task {
     val mainVirtualSystem = new VirtualSystem(System.getenv("HOME") + File.separator + ".magura/vsys")
     val result = for (p <- parsedArgs.remaining) yield {
       MaguraRepository.fromString(p).fold(Left(_), { repository =>
-        println(s"installing: github.com/${repository.user}/${repository.name} (branch: ${repository.branchName}, builder: ${repository.builder.getOrElse("<default>")})")
+        println(s"installing: github.com/${repository.user}/${repository.name} (branch: ${repository.version}, builder: ${repository.builder.getOrElse("<default>")})")
 
         val plugin = new CppBuildPlugin()
 

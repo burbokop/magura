@@ -103,9 +103,9 @@ object CMakeConnector {
           .filter(_.isDefined)
           .map(_.get)
 
-        val projectFileMd5 = projectFile.md5
+        val inputPathMd5 = inputPath.md5
 
-        TargetMetaData.insert(s"$outputPath/magura_build_info.d/target_meta.json", projectFile, true)
+        TargetMetaData.insert(s"$outputPath/magura_build_info.d/target_meta.json", inputPath, true)
           .fold(Left(_), { targetMetaData =>
             val masterCMake = generateMasterCMake(targetMetaData)
             println(s"${CYAN}Master cmake:\n$masterCMake$RESET")
@@ -114,9 +114,9 @@ object CMakeConnector {
               masterCMake
             ).fold(Left(_), { _ =>
               FileUtils.writeIfDifferent(
-                s"$outputPath/magura_build_info.d/$projectFileMd5.cmake",
+                s"$outputPath/magura_build_info.d/$inputPathMd5.cmake",
                 {
-                  val cmake = generateCMake(projectFileMd5, virtualSystem, projects)
+                  val cmake = generateCMake(inputPathMd5, virtualSystem, projects)
                   println(s"${MAGENTA}Generated build info:\n$cmake$RESET")
                   cmake
                 }

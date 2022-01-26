@@ -14,7 +14,7 @@ object GenerateReleaseInfoTask extends Task {
         .fromString(args(0))
         .fold(Left(_), { repo =>
           GithubRoutes.getRepositoryReleases(repo.user, repo.name).body
-            .fold(Left(_), r => Right(r.map(_.tag_name).find(_ == currentReleaseTag).isEmpty))
+            .fold(Left(_), r => Right(!r.map(_.tag_name).contains(currentReleaseTag)))
         })
         .map { needRelease =>
           val releaseInfo = new File(s"${buildInfo.target.getPath}${File.separator}release.info")
