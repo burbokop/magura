@@ -64,8 +64,8 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 libraryDependencies += "com.softwaremill.sttp.client3" %% "core" % "3.1.7"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
 libraryDependencies ++= Seq("org.yaml" % "snakeyaml" % "1.16")
-libraryDependencies += "io.github.burbokop" %% "magura_api" % "0.1.9"
-
+//libraryDependencies += "io.github.burbokop" %% "magura_api" % "0.1.9"
+libraryDependencies += "io.github.burbokop" %% "magura_api" % "0.1.11" from "file:///home/borys/projects/scala/magura_api/target/sonatype-staging/0.1.0-SNAPSHOT/io/github/burbokop/magura_api_2.12/0.1.10/magura_api_2.12-0.1.10.jar"
 
 
 libraryDependencies ++= Seq(

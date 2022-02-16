@@ -50,6 +50,7 @@ object ConfigureBuilder {
              inputPath: String,
              outputPath: String
            ): Either[Throwable, Unit] = {
+    println(s"${Console.GREEN_B}${virtualSystem.env()}${Console.RESET}")
     virtualSystem.update(cache).fold(Left(_), { _ =>
       val env = virtualSystem.env
       val configPath = s"$inputPath${File.separator}configure"
